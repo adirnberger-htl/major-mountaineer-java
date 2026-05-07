@@ -12,6 +12,12 @@ public final class GameEngine {
     private static final int MOVE_JUICE_COST = 10;
     private static final int LOW_JUICE_THRESHOLD = 60;
     private static final String DEFAULT_CHECKPOINT = "mud_huzz";
+    private static final Set<String> ALLOWED_CHECKPOINT_LOCATIONS = Set.of(
+            "mud_huzz",
+            "train_station",
+            "storage_building",
+            "arm_chair"
+    );
 
     private final GameWorld world = GameWorld.createDefault();
 
@@ -62,6 +68,7 @@ public final class GameEngine {
         }
         return switch (command) {
             case "drink" -> drink();
+            case "check" -> check();
             case "instructions" -> instructions();
             case "die", "halt" -> die();
             default -> resultOf(List.of("Unknown command."));
@@ -142,6 +149,23 @@ public final class GameEngine {
         return runTurn(messages -> messages.addAll(instructionsText()), true);
     }
 
+    public GameResult check() {
+        return runTurn(messages -> {
+            Room room = world.room(location);
+            if (!ALLOWED_CHECKPOINT_LOCATIONS.contains(location)) {
+                messages.add("You cannot set a checkpoint here.");
+                return;
+            }
+            if (location.equals(checkpointLocation)) {
+                messages.add("Checkpoint already set here.");
+                return;
+            }
+
+            checkpointLocation = location;
+            messages.add("Checkpoint set at " + room.title() + ".");
+        }, true);
+    }
+
     public GameResult die() {
         return runTurn(messages -> {
             triggerDeathAndRespawn(messages, "You died of death.");
@@ -170,6 +194,8 @@ public final class GameEngine {
                 "take ITEM           -- to pick up an object.",
                 "drop ITEM           -- to put down an object.",
                 "drink               -- to drink one apple_juice from inventory.",
+                "check               -- to set this place as checkpoint (if allowed).",
+                "clear               -- to clear the dialogue log.",
                 "instructions        -- to see this message again.",
                 "halt | die          -- to respawn at checkpoint."
         );

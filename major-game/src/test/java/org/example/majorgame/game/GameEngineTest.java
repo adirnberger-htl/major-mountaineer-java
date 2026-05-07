@@ -108,4 +108,29 @@ class GameEngineTest {
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Apple juices drunk")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Respawned at checkpoint")));
     }
+
+    @Test
+    void checkCommandSetsCheckpointAndRespawnsThere() {
+        GameEngine engine = new GameEngine();
+        engine.executeCommand("n");
+
+        GameResult checkResult = engine.executeCommand("check");
+        GameResult dieResult = engine.executeCommand("die");
+
+        assertTrue(checkResult.messages().stream().anyMatch(line -> line.contains("Checkpoint set at Train Station.")));
+        assertEquals("train_station", dieResult.snapshot().locationId());
+    }
+
+    @Test
+    void checkCommandIsRejectedOutsideAllowedCheckpointAreas() {
+        GameEngine engine = new GameEngine();
+        engine.executeCommand("n");
+        engine.executeCommand("check");
+        engine.executeCommand("n");
+        assertEquals("hohe_dirn", engine.snapshot().locationId());
+
+        GameResult notAllowedResult = engine.executeCommand("check");
+
+        assertTrue(notAllowedResult.messages().stream().anyMatch(line -> line.contains("You cannot set a checkpoint here.")));
+    }
 }
