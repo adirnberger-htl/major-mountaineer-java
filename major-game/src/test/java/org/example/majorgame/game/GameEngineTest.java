@@ -5,6 +5,8 @@ import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,6 +20,7 @@ class GameEngineTest {
         assertEquals("mud_huzz", snapshot.locationId());
         assertEquals(100, snapshot.appleJuice());
         assertEquals(25, snapshot.honor());
+        assertTrue(snapshot.locationPrompt().contains("Mud Huzz"));
     }
 
     @Test
@@ -58,7 +61,7 @@ class GameEngineTest {
     }
 
     @Test
-    void diesAfterTooManyCommandsAtZeroJuice() {
+    void respawnsAtCheckpointAfterTooManyCommandsAtZeroJuice() {
         GameEngine engine = new GameEngine();
         for (int i = 0; i < 5; i++) {
             engine.executeCommand("n");
@@ -66,11 +69,43 @@ class GameEngineTest {
         }
 
         assertEquals(0, engine.snapshot().appleJuice());
-        assertTrue(engine.executeCommand("look").messages().stream().anyMatch(line -> line.contains("command(s) left")));
+        assertTrue(engine.executeCommand("instructions").messages().stream().anyMatch(line -> line.contains("command(s) left")));
 
-        GameResult deathTurn = engine.executeCommand("look");
+        GameResult deathTurn = engine.executeCommand("instructions");
 
-        assertTrue(deathTurn.snapshot().gameOver());
+        assertEquals("mud_huzz", deathTurn.snapshot().locationId());
+        assertEquals(100, deathTurn.snapshot().appleJuice());
         assertTrue(deathTurn.messages().stream().anyMatch(line -> line.contains("You died of death")));
+        assertTrue(deathTurn.messages().stream().anyMatch(line -> line.contains("Respawned at checkpoint")));
+    }
+
+    @Test
+    void startJuicyLookAndRouteCommandsAreRemoved() {
+        GameEngine engine = new GameEngine();
+
+        GameResult start = engine.executeCommand("start");
+        GameResult juicy = engine.executeCommand("juicy");
+        GameResult look = engine.executeCommand("look");
+        GameResult route = engine.executeCommand("route([n,e])");
+
+        assertEquals(List.of("Unknown command."), start.messages());
+        assertEquals(List.of("Unknown command."), juicy.messages());
+        assertEquals(List.of("Unknown command."), look.messages());
+        assertEquals(List.of("Unknown command."), route.messages());
+    }
+
+    @Test
+    void dieCommandShowsStatsAndRespawnsAtCheckpoint() {
+        GameEngine engine = new GameEngine();
+        engine.executeCommand("n");
+        engine.executeCommand("s");
+
+        GameResult dieResult = engine.executeCommand("die");
+
+        assertEquals("mud_huzz", dieResult.snapshot().locationId());
+        assertEquals(100, dieResult.snapshot().appleJuice());
+        assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("[Stats]")));
+        assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Apple juices drunk")));
+        assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Respawned at checkpoint")));
     }
 }

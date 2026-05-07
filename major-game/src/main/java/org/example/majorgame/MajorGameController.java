@@ -1,6 +1,8 @@
 package org.example.majorgame;
 
 import javafx.fxml.FXML;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
@@ -9,11 +11,16 @@ import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MajorGameController {
     private final GameEngine engine = new GameEngine();
+    private final List<String> commandHistory = new ArrayList<>();
+    private int historyIndex = 0;
 
     @FXML
-    private Label locationLabel;
+    private Label locationPromptLabel;
 
     @FXML
     private Label juiceLabel;
@@ -35,7 +42,8 @@ public class MajorGameController {
 
     @FXML
     private void initialize() {
-        appendResult(engine.start());
+        appendResult(engine.openingScene());
+        historyIndex = commandHistory.size();
     }
 
     @FXML
@@ -45,8 +53,39 @@ public class MajorGameController {
             return;
         }
 
+        commandHistory.add(input);
+        historyIndex = commandHistory.size();
         appendResult(engine.executeCommand(input));
         commandField.clear();
+    }
+
+    @FXML
+    protected void onCommandFieldKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.UP) {
+            if (commandHistory.isEmpty()) {
+                return;
+            }
+            historyIndex = Math.max(0, historyIndex - 1);
+            commandField.setText(commandHistory.get(historyIndex));
+            commandField.positionCaret(commandField.getText().length());
+            event.consume();
+            return;
+        }
+
+        if (event.getCode() == KeyCode.DOWN) {
+            if (commandHistory.isEmpty()) {
+                return;
+            }
+            if (historyIndex < commandHistory.size() - 1) {
+                historyIndex += 1;
+                commandField.setText(commandHistory.get(historyIndex));
+            } else {
+                historyIndex = commandHistory.size();
+                commandField.clear();
+            }
+            commandField.positionCaret(commandField.getText().length());
+            event.consume();
+        }
     }
 
     private void appendResult(GameResult result) {
@@ -58,7 +97,7 @@ public class MajorGameController {
     }
 
     private void renderState(GameSnapshot snapshot) {
-        locationLabel.setText("Location: " + snapshot.locationTitle() + " (" + snapshot.locationId() + ")");
+        locationPromptLabel.setText(snapshot.locationPrompt());
         juiceLabel.setText("Apple juice: " + snapshot.appleJuice());
         honorLabel.setText("Honor: " + snapshot.honor());
         inventoryLabel.setText(

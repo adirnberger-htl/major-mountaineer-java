@@ -16,7 +16,7 @@
     </padding>
     <top>
         <VBox spacing="6.0">
-            <Label fx:id="locationLabel" text="Location:"/>
+            <Label fx:id="locationPromptLabel" text="Current area" wrapText="true" maxWidth="700.0"/>
             <Label fx:id="juiceLabel" text="Apple juice:"/>
             <ProgressBar fx:id="juiceBar" prefWidth="600.0"/>
             <Label fx:id="honorLabel" text="Honor:"/>
@@ -29,7 +29,8 @@
     <bottom>
         <HBox spacing="8.0">
             <TextField fx:id="commandField" HBox.hgrow="ALWAYS" onAction="#onSubmitCommand"
-                       promptText="Enter command (e.g. n, look, take apple_juice, drink)"/>
+                       onKeyPressed="#onCommandFieldKeyPressed"
+                       promptText="Enter command (e.g. n, take apple_juice, drink)"/>
             <Button text="Run" onAction="#onSubmitCommand"/>
         </HBox>
     </bottom>

@@ -11,19 +11,30 @@ public final class GameEngine {
     private static final int MAX_JUICE = 100;
     private static final int MOVE_JUICE_COST = 10;
     private static final int LOW_JUICE_THRESHOLD = 60;
+    private static final String DEFAULT_CHECKPOINT = "mud_huzz";
 
     private final GameWorld world = GameWorld.createDefault();
 
     private String location;
+    private String checkpointLocation;
     private Map<String, String> itemLocations;
     private final Set<String> inventory = new LinkedHashSet<>();
     private int appleJuice;
     private int zeroJuiceTurns;
     private int honor;
-    private boolean gameOver;
+    private int commandsSinceRespawn;
+    private int movesSinceRespawn;
+    private int appleJuicesDrunkSinceRespawn;
+    private int deathCount;
 
     public GameEngine() {
         reset();
+    }
+
+    public void setCheckpoint(String roomId) {
+        if (world.room(roomId) != null) {
+            checkpointLocation = roomId;
+        }
     }
 
     public GameResult executeCommand(String rawCommand) {
@@ -49,30 +60,18 @@ public final class GameEngine {
         if (command.startsWith("drop ")) {
             return drop(command.substring(5));
         }
-        if (command.startsWith("route(") && command.endsWith(")")) {
-            return route(parseRoute(command.substring(6, command.length() - 1)));
-        }
-
         return switch (command) {
-            case "start" -> start();
-            case "look" -> look();
             case "drink" -> drink();
-            case "juicy" -> juicy();
             case "instructions" -> instructions();
             case "die", "halt" -> die();
             default -> resultOf(List.of("Unknown command."));
         };
     }
 
-    public GameResult start() {
-        return runTurn(messages -> {
-            messages.addAll(instructionsText());
-            renderCurrentLocation(messages);
-        }, true);
-    }
-
-    public GameResult look() {
-        return runTurn(this::renderCurrentLocation, true);
+    public GameResult openingScene() {
+        List<String> messages = new ArrayList<>();
+        messages.addAll(instructionsText());
+        return resultOf(messages);
     }
 
     public GameResult move(Direction direction) {
@@ -84,8 +83,9 @@ public final class GameEngine {
             }
 
             location = next;
+            handleAutoRoute(messages);
             lowerAppleJuice();
-            renderCurrentLocation(messages);
+            movesSinceRespawn += 1;
             printLowJuiceUpdate(messages);
         }, true);
     }
@@ -132,41 +132,20 @@ public final class GameEngine {
 
             inventory.remove("apple_juice");
             refillAppleJuice();
+            appleJuicesDrunkSinceRespawn += 1;
             messages.add("You drink an apple juice.");
             printLowJuiceUpdate(messages);
         }, true);
-    }
-
-    public GameResult juicy() {
-        return runTurn(messages -> messages.add("Apple juice meter: " + appleJuice + "."), true);
     }
 
     public GameResult instructions() {
         return runTurn(messages -> messages.addAll(instructionsText()), true);
     }
 
-    public GameResult route(List<Direction> moves) {
-        if (gameOver) {
-            return resultOf(List.of("The game is over."));
-        }
-        for (Direction move : moves) {
-            String next = world.nextLocation(location, move);
-            if (next == null) {
-                break;
-            }
-            location = next;
-        }
-        List<String> messages = new ArrayList<>();
-        renderCurrentLocation(messages);
-        return resultOf(messages);
-    }
-
     public GameResult die() {
-        if (gameOver) {
-            return resultOf(List.of("The game is over."));
-        }
-        gameOver = true;
-        return resultOf(List.of("The game is over."));
+        return runTurn(messages -> {
+            triggerDeathAndRespawn(messages, "You died of death.");
+        }, false);
     }
 
     public GameSnapshot snapshot() {
@@ -174,28 +153,25 @@ public final class GameEngine {
         return new GameSnapshot(
                 location,
                 room.title(),
+                buildLocationPrompt(),
                 appleJuice,
                 honor,
                 zeroJuiceTurns,
                 Set.copyOf(inventory),
                 List.copyOf(visibleItems()),
-                gameOver
+                false
         );
     }
 
     private List<String> instructionsText() {
         return List.of(
                 "Available commands are:",
-                "start               -- to start the game.",
                 "n | s | e | w       -- to go in that direction.",
                 "take ITEM           -- to pick up an object.",
                 "drop ITEM           -- to put down an object.",
-                "look                -- to look around you again.",
-                "route([n,e,...])    -- run a silent batch of moves without juice use.",
                 "drink               -- to drink one apple_juice from inventory.",
-                "juicy               -- to check apple juice meter.",
                 "instructions        -- to see this message again.",
-                "halt | die          -- to end the game."
+                "halt | die          -- to respawn at checkpoint."
         );
     }
 
@@ -204,12 +180,9 @@ public final class GameEngine {
     }
 
     private GameResult runTurn(TurnAction action, boolean applyEndTurn) {
-        if (gameOver) {
-            return resultOf(List.of("The game is over."));
-        }
-
         boolean wasZeroBefore = appleJuice == 0;
         List<String> messages = new ArrayList<>();
+        commandsSinceRespawn += 1;
         action.run(messages);
         if (applyEndTurn) {
             endTurn(wasZeroBefore, messages);
@@ -235,18 +208,11 @@ public final class GameEngine {
         zeroJuiceTurns = 0;
     }
 
-    private void renderCurrentLocation(List<String> messages) {
+    private void handleAutoRoute(List<String> messages) {
         Room room = world.room(location);
         if (room.autoRouteDirection() != null) {
             messages.add(room.autoRouteMessage());
             applyRouteMove(room.autoRouteDirection());
-            room = world.room(location);
-        }
-
-        messages.add("---- " + room.title() + " ----");
-        messages.addAll(room.descriptionLines());
-        for (String item : visibleItems()) {
-            messages.add("There is a " + item + " here.");
         }
     }
 
@@ -263,6 +229,17 @@ public final class GameEngine {
                 .map(Map.Entry::getKey)
                 .sorted(Comparator.naturalOrder())
                 .toList();
+    }
+
+    private String buildLocationPrompt() {
+        Room room = world.room(location);
+        List<String> lines = new ArrayList<>();
+        lines.add("---- " + room.title() + " ----");
+        lines.addAll(room.descriptionLines());
+        for (String item : visibleItems()) {
+            lines.add("There is a " + item + " here.");
+        }
+        return String.join(System.lineSeparator(), lines);
     }
 
     private void lowerAppleJuice() {
@@ -289,9 +266,38 @@ public final class GameEngine {
 
     private void appleDeath(List<String> messages) {
         messages.add("Major screams: \"AHHHH, IT HURTS, AHHHHHH.\"");
-        messages.add("You died of death. Two commands passed at zero juice.");
-        messages.add("The game is over.");
-        gameOver = true;
+        triggerDeathAndRespawn(messages, "You died of death. Two commands passed at zero juice.");
+    }
+
+    private void triggerDeathAndRespawn(List<String> messages, String reason) {
+        messages.add("");
+        messages.add(reason);
+        messages.add("");
+        deathCount += 1;
+        appendDeathStats(messages);
+        messages.add("");
+        messages.add("You wake up at your checkpoint.");
+        messages.add("");
+        respawnAtCheckpoint(messages);
+    }
+
+    private void appendDeathStats(List<String> messages) {
+        messages.add(
+                "[Stats] Commands this run: " + commandsSinceRespawn
+                        + " | Moves: " + movesSinceRespawn
+                        + " | Apple juices drunk: " + appleJuicesDrunkSinceRespawn
+                        + " | Deaths total: " + deathCount
+        );
+    }
+
+    private void respawnAtCheckpoint(List<String> messages) {
+        location = checkpointLocation;
+        appleJuice = MAX_JUICE;
+        zeroJuiceTurns = 0;
+        commandsSinceRespawn = 0;
+        movesSinceRespawn = 0;
+        appleJuicesDrunkSinceRespawn = 0;
+        messages.add("---- Respawned at checkpoint ----");
     }
 
     private String normalizeCommand(String rawCommand) {
@@ -309,36 +315,21 @@ public final class GameEngine {
         return itemName.trim().toLowerCase().replace(' ', '_');
     }
 
-    private List<Direction> parseRoute(String routeBody) {
-        String cleaned = routeBody.trim();
-        if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
-            cleaned = cleaned.substring(1, cleaned.length() - 1).trim();
-        }
-        if (cleaned.isEmpty()) {
-            return List.of();
-        }
-
-        List<Direction> moves = new ArrayList<>();
-        for (String token : cleaned.split(",")) {
-            Direction direction = Direction.fromToken(token.trim());
-            if (direction != null) {
-                moves.add(direction);
-            }
-        }
-        return moves;
-    }
-
     private GameResult resultOf(List<String> messages) {
         return new GameResult(List.copyOf(messages), snapshot());
     }
 
     private void reset() {
-        location = "mud_huzz";
+        location = DEFAULT_CHECKPOINT;
+        checkpointLocation = DEFAULT_CHECKPOINT;
         itemLocations = world.initialItemLocations();
         inventory.clear();
         appleJuice = MAX_JUICE;
         zeroJuiceTurns = 0;
         honor = 25;
-        gameOver = false;
+        commandsSinceRespawn = 0;
+        movesSinceRespawn = 0;
+        appleJuicesDrunkSinceRespawn = 0;
+        deathCount = 0;
     }
 }
