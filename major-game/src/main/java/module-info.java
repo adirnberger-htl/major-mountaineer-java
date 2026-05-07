@@ -5,4 +5,5 @@ module org.example.majorgame {
 
     opens org.example.majorgame to javafx.fxml;
     exports org.example.majorgame;
+    exports org.example.majorgame.game;
 }

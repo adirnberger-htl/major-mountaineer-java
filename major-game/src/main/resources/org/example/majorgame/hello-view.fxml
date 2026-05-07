@@ -1,16 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.majorgame.HelloController">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.HelloController">
     <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        <Insets bottom="12.0" left="12.0" right="12.0" top="12.0"/>
     </padding>
-
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
-</VBox>
+    <top>
+        <VBox spacing="6.0">
+            <Label fx:id="locationLabel" text="Location:"/>
+            <Label fx:id="juiceLabel" text="Apple juice:"/>
+            <ProgressBar fx:id="juiceBar" prefWidth="600.0"/>
+            <Label fx:id="honorLabel" text="Honor:"/>
+            <Label fx:id="inventoryLabel" text="Inventory:"/>
+        </VBox>
+    </top>
+    <center>
+        <TextArea fx:id="outputArea" editable="false" wrapText="true" prefRowCount="20"/>
+    </center>
+    <bottom>
+        <HBox spacing="8.0">
+            <TextField fx:id="commandField" HBox.hgrow="ALWAYS" onAction="#onSubmitCommand"
+                       promptText="Enter command (e.g. n, look, take apple_juice, drink)"/>
+            <Button text="Run" onAction="#onSubmitCommand"/>
+        </HBox>
+    </bottom>
+</BorderPane>
