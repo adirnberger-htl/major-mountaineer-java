@@ -1,0 +1,159 @@
+.root-pane {
+    -panel-bg: rgba(14, 25, 38, 0.7);
+    -panel-border: rgba(192, 215, 230, 0.58);
+    -text-primary: #e7f0f7;
+    -text-muted: #d8e8f5;
+    -control-bg: rgba(14, 25, 38, 0.78);
+    -control-border: rgba(192, 215, 230, 0.62);
+    -fx-background-color: #0f1f2f;
+    -fx-background-image: url("images/backdrop-majorgame.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+.status-panel {
+    -fx-background-color: -panel-bg;
+    -fx-background-radius: 12;
+    -fx-border-color: -panel-border;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+.trail-heading {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.status-label {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.juice-bar {
+    -fx-accent: #8fcf78;
+}
+
+.honor-bar {
+    -fx-accent: #88a8d8;
+}
+
+.status-bar .track {
+    -fx-background-color: -control-bg;
+    -fx-background-radius: 8;
+    -fx-border-color: -control-border;
+    -fx-border-radius: 8;
+}
+
+.status-meters {
+    -fx-alignment: center-left;
+}
+
+.meter-card {
+    -fx-background-color: rgba(10, 18, 27, 0.34);
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+
+.command-panel {
+    -fx-background-color: -panel-bg;
+    -fx-background-radius: 12;
+    -fx-border-color: -panel-border;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+.inventory-grid {
+    -fx-background-color: rgba(10, 18, 27, 0.34);
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+
+.inventory-item {
+    -fx-alignment: center;
+    -fx-background-color: rgba(14, 25, 38, 0.8);
+    -fx-background-radius: 8;
+    -fx-border-color: -control-border;
+    -fx-border-radius: 8;
+    -fx-padding: 8;
+    -fx-min-width: 116;
+}
+
+.inventory-item-label {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.inventory-fallback-icon {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 32px;
+    -fx-font-weight: 700;
+}
+
+.inventory-empty {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+#outputArea {
+    -fx-background-color: -panel-bg;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-color: -panel-border;
+    -fx-border-radius: 12;
+    -fx-padding: 8;
+    -fx-control-inner-background: transparent;
+    -fx-font-family: "Consolas", "Monaco", monospace;
+    -fx-font-size: 14px;
+    -fx-text-fill: -text-primary;
+}
+
+#outputArea .viewport {
+    -fx-background-color: transparent;
+}
+
+#outputArea .content {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
+}
+
+#outputArea .text {
+    -fx-fill: -text-primary;
+}
+
+.text-field {
+    -fx-background-color: -control-bg;
+    -fx-background-radius: 8;
+    -fx-border-color: -control-border;
+    -fx-border-radius: 8;
+    -fx-prompt-text-fill: rgba(231, 240, 247, 0.75);
+    -fx-text-fill: -text-primary;
+    -fx-highlight-fill: rgba(143, 207, 120, 0.5);
+    -fx-highlight-text-fill: #ffffff;
+}
+
+.button {
+    -fx-background-color: -control-bg;
+    -fx-text-fill: -text-primary;
+    -fx-font-weight: 700;
+    -fx-border-color: -control-border;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: rgba(26, 44, 62, 0.88);
+}
+
+.button:pressed {
+    -fx-background-color: rgba(10, 18, 27, 0.9);
+}
