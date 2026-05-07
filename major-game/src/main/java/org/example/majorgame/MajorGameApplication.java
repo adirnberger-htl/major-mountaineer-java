@@ -7,10 +7,10 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class HelloApplication extends Application {
+public class MajorGameApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(MajorGameApplication.class.getResource("major-game-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 760, 560);
         stage.setTitle("Major Mountaineer");
         stage.setScene(scene);

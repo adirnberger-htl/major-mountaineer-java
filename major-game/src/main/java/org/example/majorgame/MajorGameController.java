@@ -9,7 +9,7 @@ import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
 
-public class HelloController {
+public class MajorGameController {
     private final GameEngine engine = new GameEngine();
 
     @FXML

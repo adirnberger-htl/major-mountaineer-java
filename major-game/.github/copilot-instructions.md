@@ -36,9 +36,9 @@ Use the Gradle wrapper from the `major-game` directory.
 This is a modular JavaFX application with a small MVC-style flow:
 
 1. `org.example.majorgame.Launcher` is the JVM entry point (`main`).
-2. `HelloApplication` extends `javafx.application.Application`, loads FXML, and creates the primary `Scene`/`Stage`.
-3. `hello-view.fxml` defines the UI layout and binds actions/fields to `HelloController`.
-4. `HelloController` handles UI events and updates JavaFX controls.
+2. `MajorGameApplication` extends `javafx.application.Application`, loads FXML, and creates the primary `Scene`/`Stage`.
+3. `major-game-view.fxml` defines the UI layout and binds actions/fields to `MajorGameController`.
+4. `MajorGameController` handles UI events and updates JavaFX controls.
 5. `module-info.java` declares module boundaries (`requires javafx.controls`, `requires javafx.fxml`), exports the app package, and opens it for FXML reflection.
 
 ## Key repository conventions
@@ -49,7 +49,6 @@ This is a modular JavaFX application with a small MVC-style flow:
   - `module-info.java`
   - Java package paths under `src/main/java`
   - Resource paths under `src/main/resources`
-- Place FXML files in the same package path as the loading application class so `HelloApplication.class.getResource(...)` resolves correctly.
+- Place FXML files in the same package path as the loading application class so `MajorGameApplication.class.getResource(...)` resolves correctly.
 - When adding controller-bound UI elements, keep `fx:controller`, `@FXML` fields/methods, and FXML `fx:id`/event handler names in sync.
 - The project targets Java toolchains compatible with JavaFX 21 (currently Java 21).
-
