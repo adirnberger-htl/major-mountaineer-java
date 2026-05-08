@@ -8,7 +8,7 @@ You are a mountaineer named major and you are a lonely apple juice addict. In yo
 
 This is a text based adventure game, you walk along the well known mountain pass for as long as you can. You arrive at the base-camp of the Hohe Dirn, from this point forth you will be the first human to have ever wandered these lands ... or are you?
 
-### Apple Jiuce Meter
+### Apple Juice Meter
 
 You are an apple juice addict. You HAVE to drink apple juice or else ... things happen ... scary things.
 
