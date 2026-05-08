@@ -109,6 +109,9 @@ public class MajorGameController {
     }
 
     private void appendResult(GameResult result) {
+        if (result.snapshot().gameOver()) {
+            outputArea.clear();
+        }
         for (String message : result.messages()) {
             outputArea.appendText(message + System.lineSeparator());
         }

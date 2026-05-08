@@ -104,6 +104,7 @@ class GameEngineTest {
 
         assertEquals("mud_huzz", dieResult.snapshot().locationId());
         assertEquals(100, dieResult.snapshot().appleJuice());
+        assertTrue(dieResult.snapshot().gameOver());
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("[Stats]")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Apple juices drunk")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Respawned at checkpoint")));

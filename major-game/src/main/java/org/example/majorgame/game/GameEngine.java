@@ -18,6 +18,7 @@ public final class GameEngine {
             "storage_building",
             "arm_chair"
     );
+    private static final GameTextCatalog TEXTS = GameTextCatalog.defaultCatalog();
 
     private final GameWorld world = GameWorld.createDefault();
 
@@ -32,6 +33,7 @@ public final class GameEngine {
     private int movesSinceRespawn;
     private int appleJuicesDrunkSinceRespawn;
     private int deathCount;
+    private boolean clearOutputOnNextResult;
 
     public GameEngine() {
         reset();
@@ -173,6 +175,10 @@ public final class GameEngine {
     }
 
     public GameSnapshot snapshot() {
+        return snapshot(false);
+    }
+
+    private GameSnapshot snapshot(boolean gameOver) {
         Room room = world.room(location);
         return new GameSnapshot(
                 location,
@@ -183,22 +189,12 @@ public final class GameEngine {
                 zeroJuiceTurns,
                 Set.copyOf(inventory),
                 List.copyOf(visibleItems()),
-                false
+                gameOver
         );
     }
 
     private List<String> instructionsText() {
-        return List.of(
-                "Available commands are:",
-                "n | s | e | w       -- to go in that direction.",
-                "take ITEM           -- to pick up an object.",
-                "drop ITEM           -- to put down an object.",
-                "drink               -- to drink one apple_juice from inventory.",
-                "check               -- to set this place as checkpoint (if allowed).",
-                "clear               -- to clear the dialogue log.",
-                "instructions        -- to see this message again.",
-                "halt | die          -- to respawn at checkpoint."
-        );
+        return TEXTS.instructions();
     }
 
     private interface TurnAction {
@@ -305,15 +301,16 @@ public final class GameEngine {
         messages.add("You wake up at your checkpoint.");
         messages.add("");
         respawnAtCheckpoint(messages);
+        clearOutputOnNextResult = true;
     }
 
     private void appendDeathStats(List<String> messages) {
-        messages.add(
-                "[Stats] Commands this run: " + commandsSinceRespawn
-                        + " | Moves: " + movesSinceRespawn
-                        + " | Apple juices drunk: " + appleJuicesDrunkSinceRespawn
-                        + " | Deaths total: " + deathCount
-        );
+        messages.add("========== [Stats] ==========");
+        messages.add("Commands this run : " + commandsSinceRespawn);
+        messages.add("Moves             : " + movesSinceRespawn);
+        messages.add("Apple juices drunk: " + appleJuicesDrunkSinceRespawn);
+        messages.add("Deaths total      : " + deathCount);
+        messages.add("=============================");
     }
 
     private void respawnAtCheckpoint(List<String> messages) {
@@ -342,7 +339,9 @@ public final class GameEngine {
     }
 
     private GameResult resultOf(List<String> messages) {
-        return new GameResult(List.copyOf(messages), snapshot());
+        boolean gameOver = clearOutputOnNextResult;
+        clearOutputOnNextResult = false;
+        return new GameResult(List.copyOf(messages), snapshot(gameOver));
     }
 
     private void reset() {
@@ -357,5 +356,6 @@ public final class GameEngine {
         movesSinceRespawn = 0;
         appleJuicesDrunkSinceRespawn = 0;
         deathCount = 0;
+        clearOutputOnNextResult = false;
     }
 }
