@@ -1,4 +1,7 @@
 locations:
+
+  # Starter Area
+
   mud_huzz:
     title: "Mud Huzz"
     description:
@@ -25,20 +28,70 @@ locations:
       - "Its lonely ever since she died, you didnt dare touch the chair after the day of her funeral."
       - "You hope that maybe some day youll find someone wholl be as perfect as she was."
       - "EAST to return to the Mudd Huzz."
+
+  # The Illusion of choice
+
+  traunstein:
+    title: "TRAUNSTEIN"
+    description: [ ]
+    autoRouteMessage: "Oops, seems like you fell asleep, you are now at ... HOHE DIRN?!"
+    autoRouteDirection: "e"
+  grosser_priel:
+    title: "GROSSER PRIEL"
+    description: [ ]
+    autoRouteMessage: "zzzzZZZzzz ... what? .. where am I? ... HOHE DIRN?!"
+    autoRouteDirection: "e"
+
+  # Hohe Dirn Campaign
+
   hohe_dirn:
     title: "HOHE DIRN"
     description:
       - "Welcome the the HOHE DIRN hike."
       - "This is the beginner hike, lets hope you are well stocked in apple juice."
-      - "NORTH awaits the start of your journy. Be careful of the local population, they might be dangerous."
+      - "NORTH awaits the start of your journey. Be careful of the local population, they might be dangerous."
+  hd_slums:
+    title: "THE SLUMS"
+    description:
+      - "Mhhhhh, where does the trail start?"
+      - "There seems to be a local, we could ask him."
+      - "NORTH we can go to the nice looking old man and ask him for directions."
+      - "EAST there seems to be a small trail, we could just try our luck."
+  hd_homeless:
+    title: "MEETING THE LOCAL"
+    description:
+      - "Major: Salutations gentleman, do you happen to know where the trail to the HOHE DIRN begins?"
+      - "Man: Hm ..? You .. you want to go .. up there!!?"
+      - "Man: YOU DARE DISTURB THE GODS !!?? YOU WILL NOT BRING DESPAIR UPON THIS VILLAGE !!!"
+
+paths:
+  # Starter Area
+  mud_huzz:
+    n: "train_station"
+    e: "storage_building"
+    w: "arm_chair"
+  train_station:
+    s: "mud_huzz"
+    e: "hohe_dirn"
+    n: "traunstein"
+    w: "grosser_priel"
+  storage_building:
+    w: "mud_huzz"
+  arm_chair:
+    e: "mud_huzz"
+  # The Illusion of Choice
   traunstein:
-    title: "TRAUNSTEIN"
-    description: []
-    autoRouteMessage: "Oops, seems like you fell asleep, you are now at ... HOHE DIRN?!"
+    e: "hohe_dirn"
   grosser_priel:
-    title: "GROSSER PRIEL"
-    description: []
-    autoRouteMessage: "zzzzZZZzzz ... what? .. where am I? ... HOHE DIRN?!"
+    e: "hohe_dirn"
+  # Hohe Dirn Campaign
+  hohe_dirn:
+    n: "hd_slums"
+  hd_slums:
+    n: "hd_homeless"
+
+items:
+  apple_juice: "storage_building"
 
 commands:
   instructions:

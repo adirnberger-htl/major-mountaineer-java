@@ -22,46 +22,49 @@ final class GameWorld {
 
     static GameWorld createDefault() {
         Map<String, Room> rooms = new LinkedHashMap<>();
-        addRoom(rooms, "mud_huzz", null);
-        addRoom(rooms, "train_station", null);
-        addRoom(rooms, "storage_building", null);
-        addRoom(rooms, "arm_chair", null);
-        addRoom(rooms, "hohe_dirn", null);
-        addRoom(rooms, "traunstein", Direction.E);
-        addRoom(rooms, "grosser_priel", Direction.E);
+        for (Map.Entry<String, GameTextCatalog.LocationText> entry : TEXTS.locations().entrySet()) {
+            String roomId = entry.getKey();
+            GameTextCatalog.LocationText locationText = entry.getValue();
+            rooms.put(roomId, new Room(
+                    roomId,
+                    locationText.title(),
+                    locationText.descriptionLines(),
+                    locationText.autoRouteMessage(),
+                    locationText.autoRouteDirection()
+            ));
+        }
 
-        Map<String, Map<Direction, String>> paths = new LinkedHashMap<>();
-        addPath(paths, "mud_huzz", Direction.N, "train_station");
-        addPath(paths, "train_station", Direction.S, "mud_huzz");
-        addPath(paths, "mud_huzz", Direction.E, "storage_building");
-        addPath(paths, "storage_building", Direction.W, "mud_huzz");
-        addPath(paths, "mud_huzz", Direction.W, "arm_chair");
-        addPath(paths, "arm_chair", Direction.E, "mud_huzz");
-        addPath(paths, "train_station", Direction.E, "hohe_dirn");
-        addPath(paths, "train_station", Direction.N, "traunstein");
-        addPath(paths, "train_station", Direction.W, "grosser_priel");
-        addPath(paths, "traunstein", Direction.E, "hohe_dirn");
-        addPath(paths, "grosser_priel", Direction.E, "hohe_dirn");
+        Map<String, Map<Direction, String>> paths = TEXTS.paths();
+        validatePaths(rooms, paths);
 
-        Map<String, String> initialItems = new LinkedHashMap<>();
-        initialItems.put("apple_juice", "storage_building");
+        Map<String, String> initialItems = TEXTS.initialItems();
+        validateInitialItems(rooms, initialItems);
 
         return new GameWorld(rooms, paths, initialItems);
     }
 
-    private static void addRoom(Map<String, Room> rooms, String roomId, Direction autoRouteDirection) {
-        GameTextCatalog.LocationText locationText = TEXTS.location(roomId);
-        rooms.put(roomId, new Room(
-                roomId,
-                locationText.title(),
-                locationText.descriptionLines(),
-                locationText.autoRouteMessage(),
-                autoRouteDirection
-        ));
+    private static void validatePaths(Map<String, Room> rooms, Map<String, Map<Direction, String>> paths) {
+        for (Map.Entry<String, Map<Direction, String>> fromEntry : paths.entrySet()) {
+            String from = fromEntry.getKey();
+            if (!rooms.containsKey(from)) {
+                throw new IllegalStateException("Path source room is unknown: " + from);
+            }
+            for (String to : fromEntry.getValue().values()) {
+                if (!rooms.containsKey(to)) {
+                    throw new IllegalStateException("Path target room is unknown: " + to);
+                }
+            }
+        }
     }
 
-    private static void addPath(Map<String, Map<Direction, String>> paths, String from, Direction direction, String to) {
-        paths.computeIfAbsent(from, key -> new LinkedHashMap<>()).put(direction, to);
+    private static void validateInitialItems(Map<String, Room> rooms, Map<String, String> initialItems) {
+        for (Map.Entry<String, String> entry : initialItems.entrySet()) {
+            String itemId = entry.getKey();
+            String location = entry.getValue();
+            if (!rooms.containsKey(location)) {
+                throw new IllegalStateException("Item '" + itemId + "' references unknown room: " + location);
+            }
+        }
     }
 
     Room room(String roomId) {

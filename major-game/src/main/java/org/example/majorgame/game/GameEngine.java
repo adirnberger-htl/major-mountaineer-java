@@ -1,5 +1,10 @@
 package org.example.majorgame.game;
 
+import org.example.majorgame.game.combat.CombatActionResult;
+import org.example.majorgame.game.combat.CombatDataCatalog;
+import org.example.majorgame.game.combat.CombatEngine;
+import org.example.majorgame.game.combat.CombatSnapshot;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -14,13 +19,13 @@ public final class GameEngine {
     private static final String DEFAULT_CHECKPOINT = "mud_huzz";
     private static final Set<String> ALLOWED_CHECKPOINT_LOCATIONS = Set.of(
             "mud_huzz",
-            "train_station",
-            "storage_building",
-            "arm_chair"
+            "hohe_dirn"
     );
     private static final GameTextCatalog TEXTS = GameTextCatalog.defaultCatalog();
+    private static final CombatDataCatalog COMBAT_DATA = CombatDataCatalog.defaultCatalog();
 
     private final GameWorld world = GameWorld.createDefault();
+    private final Set<String> clearedCombatLocations = new LinkedHashSet<>();
 
     private String location;
     private String checkpointLocation;
@@ -34,6 +39,7 @@ public final class GameEngine {
     private int appleJuicesDrunkSinceRespawn;
     private int deathCount;
     private boolean clearOutputOnNextResult;
+    private CombatEngine activeCombat;
 
     public GameEngine() {
         reset();
@@ -49,6 +55,17 @@ public final class GameEngine {
         String command = normalizeCommand(rawCommand);
         if (command.isEmpty()) {
             return resultOf(List.of("Enter a command."));
+        }
+
+        if (activeCombat != null && !activeCombat.isFinished()) {
+            return switch (command) {
+                case "die", "halt" -> die();
+                case "instructions" -> resultOf(List.of(
+                        "You are in combat. Use the battle grid and action box.",
+                        "Combat commands: click tile to move, choose ability, click target."
+                ));
+                default -> resultOf(List.of("You are in combat. Use the battle controls."));
+            };
         }
 
         Direction direction = Direction.fromToken(command);
@@ -96,7 +113,38 @@ public final class GameEngine {
             lowerAppleJuice();
             movesSinceRespawn += 1;
             printLowJuiceUpdate(messages);
+            maybeStartCombat(messages);
         }, true);
+    }
+
+    public GameResult combatMovePlayer(int row, int col) {
+        if (activeCombat == null || activeCombat.isFinished()) {
+            return resultOf(List.of("No active combat."));
+        }
+        CombatActionResult result = activeCombat.movePlayer(row, col);
+        return resultOf(result.messages());
+    }
+
+    public GameResult combatSelectAbility(String abilityId) {
+        if (activeCombat == null || activeCombat.isFinished()) {
+            return resultOf(List.of("No active combat."));
+        }
+        CombatActionResult result = activeCombat.selectAbility(abilityId);
+        return resultOf(result.messages());
+    }
+
+    public GameResult combatTargetAt(int row, int col) {
+        if (activeCombat == null || activeCombat.isFinished()) {
+            return resultOf(List.of("No active combat."));
+        }
+        CombatActionResult result = activeCombat.targetAt(row, col);
+        List<String> messages = new ArrayList<>(result.messages());
+        handleCombatCompletion(messages);
+        return resultOf(messages);
+    }
+
+    public boolean inCombat() {
+        return activeCombat != null && !activeCombat.isFinished();
     }
 
     public GameResult take(String itemName) {
@@ -180,6 +228,7 @@ public final class GameEngine {
 
     private GameSnapshot snapshot(boolean gameOver) {
         Room room = world.room(location);
+        CombatSnapshot combatSnapshot = inCombat() ? activeCombat.snapshot() : null;
         return new GameSnapshot(
                 location,
                 room.title(),
@@ -189,7 +238,9 @@ public final class GameEngine {
                 zeroJuiceTurns,
                 Set.copyOf(inventory),
                 List.copyOf(visibleItems()),
-                gameOver
+                gameOver,
+                inCombat(),
+                combatSnapshot
         );
     }
 
@@ -320,7 +371,38 @@ public final class GameEngine {
         commandsSinceRespawn = 0;
         movesSinceRespawn = 0;
         appleJuicesDrunkSinceRespawn = 0;
+        activeCombat = null;
         messages.add("---- Respawned at checkpoint ----");
+    }
+
+    private void maybeStartCombat(List<String> messages) {
+        if (activeCombat != null && !activeCombat.isFinished()) {
+            return;
+        }
+        if (clearedCombatLocations.contains(location)) {
+            return;
+        }
+
+        CombatDataCatalog.EncounterDefinition encounter = COMBAT_DATA.encounterForLocation(location);
+        if (encounter == null) {
+            return;
+        }
+
+        activeCombat = CombatEngine.start(COMBAT_DATA, encounter);
+        messages.addAll(activeCombat.openingMessages());
+        messages.add("Combat started. Use the battle grid to move and attack.");
+    }
+
+    private void handleCombatCompletion(List<String> messages) {
+        if (activeCombat == null || !activeCombat.isFinished()) {
+            return;
+        }
+        if (activeCombat.playerWon()) {
+            clearedCombatLocations.add(location);
+            messages.add("The path is clear for now.");
+            return;
+        }
+        triggerDeathAndRespawn(messages, "You were defeated in combat.");
     }
 
     private String normalizeCommand(String rawCommand) {
@@ -357,5 +439,7 @@ public final class GameEngine {
         appleJuicesDrunkSinceRespawn = 0;
         deathCount = 0;
         clearOutputOnNextResult = false;
+        activeCombat = null;
+        clearedCombatLocations.clear();
     }
 }

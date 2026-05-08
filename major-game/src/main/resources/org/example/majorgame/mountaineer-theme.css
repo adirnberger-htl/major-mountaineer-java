@@ -157,3 +157,72 @@
 .button:pressed {
     -fx-background-color: rgba(10, 18, 27, 0.9);
 }
+
+.battle-pane {
+    -fx-background-color: rgba(10, 18, 27, 0.45);
+    -fx-background-radius: 12;
+    -fx-border-color: -panel-border;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+.battle-grid {
+    -fx-hgap: 4;
+    -fx-vgap: 4;
+}
+
+.battle-tile {
+    -fx-background-color: rgba(14, 25, 38, 0.78);
+    -fx-border-color: rgba(192, 215, 230, 0.35);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.battle-tile-reachable {
+    -fx-background-color: rgba(75, 132, 200, 0.5);
+}
+
+.battle-tile-targetable {
+    -fx-background-color: rgba(183, 71, 71, 0.6);
+}
+
+.battle-unit {
+    -fx-alignment: center;
+}
+
+.battle-unit-player {
+    -fx-text-fill: #9be18a;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.battle-unit-enemy {
+    -fx-text-fill: #f2aa9f;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.battle-unit-hp {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 10px;
+    -fx-font-weight: 600;
+}
+
+.battle-action-box {
+    -fx-background-color: rgba(8, 15, 25, 0.92);
+    -fx-border-color: -panel-border;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+    -fx-max-width: 280;
+}
+
+.battle-status-label {
+    -fx-text-fill: -text-primary;
+    -fx-font-weight: 600;
+}
+
+.battle-action-button {
+    -fx-min-width: 110;
+}

@@ -8,7 +8,9 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController"
@@ -35,13 +37,23 @@
         </VBox>
     </top>
     <center>
-        <TextArea fx:id="outputArea" editable="false" wrapText="true" prefRowCount="20"/>
+        <StackPane>
+            <TextArea fx:id="outputArea" editable="false" wrapText="true" prefRowCount="20"/>
+            <StackPane fx:id="battlePane" visible="false" managed="false" styleClass="battle-pane">
+                <GridPane fx:id="battleGrid" styleClass="battle-grid"/>
+                <VBox fx:id="battleActionBox" spacing="8.0" styleClass="battle-action-box"
+                      StackPane.alignment="BOTTOM_RIGHT" managed="false" visible="false">
+                    <Label fx:id="battleStatusLabel" text="Choose your move." wrapText="true" styleClass="battle-status-label"/>
+                    <FlowPane fx:id="battleActionsPane" hgap="8.0" vgap="8.0"/>
+                </VBox>
+            </StackPane>
+        </StackPane>
     </center>
     <bottom>
-        <HBox spacing="8.0" styleClass="command-panel">
+        <HBox fx:id="commandPanel" spacing="8.0" styleClass="command-panel">
             <TextField fx:id="commandField" HBox.hgrow="ALWAYS" onAction="#onSubmitCommand"
-                        onKeyPressed="#onCommandFieldKeyPressed"
-                        promptText="Enter command (e.g. n, take apple_juice, drink)"/>
+                       onKeyPressed="#onCommandFieldKeyPressed"
+                       promptText="Enter command (e.g. n, take apple_juice, drink)"/>
             <Button text="Run" onAction="#onSubmitCommand" styleClass="command-button"/>
         </HBox>
     </bottom>

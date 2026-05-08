@@ -134,4 +134,17 @@ class GameEngineTest {
 
         assertTrue(notAllowedResult.messages().stream().anyMatch(line -> line.contains("You cannot set a checkpoint here.")));
     }
+
+    @Test
+    void enteringSlumsStartsCombatWithOldMan() {
+        GameEngine engine = new GameEngine();
+        engine.executeCommand("n");
+        engine.executeCommand("e");
+
+        GameResult result = engine.executeCommand("n");
+
+        assertTrue(result.snapshot().inCombat());
+        assertTrue(result.messages().stream().anyMatch(line -> line.contains("Old Man")));
+        assertTrue(result.snapshot().combatSnapshot().playerAbilityIds().contains("punch"));
+    }
 }

@@ -1,0 +1,40 @@
+abilities:
+  punch:
+    name: "Punch"
+    damage: 5
+    range: 1
+  cane_strike:
+    name: "Cane Strike"
+    damage: 4
+    range: 1
+
+weapons:
+  fists:
+    name: "Fists"
+    damageBonus: 0
+  walking_cane:
+    name: "Walking Cane"
+    damageBonus: 1
+
+enemyTypes:
+  old_man:
+    name: "Old Man"
+    maxHp: 18
+    movesPerTurn: 1
+    abilities:
+      - "cane_strike"
+    weapon: "walking_cane"
+
+encounters:
+  hd_slums_old_man:
+    location: "hd_slums"
+    rows: 5
+    cols: 7
+    playerStart:
+      row: 4
+      col: 1
+    enemies:
+      - id: "old_man_1"
+        type: "old_man"
+        row: 0
+        col: 5

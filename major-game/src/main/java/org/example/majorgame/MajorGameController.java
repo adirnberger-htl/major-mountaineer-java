@@ -1,6 +1,7 @@
 package org.example.majorgame;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
@@ -10,10 +11,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
+import org.example.majorgame.game.combat.CombatSnapshot;
+import org.example.majorgame.game.combat.CombatTile;
+import org.example.majorgame.game.combat.CombatUnitSnapshot;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,11 +32,13 @@ import java.util.Set;
 public class MajorGameController {
     private static final int STATUS_MAX = 100;
     private static final String ICON_PATH_PREFIX = "/org/example/majorgame/icons/";
+    private static final int BATTLE_TILE_SIZE = 64;
 
     private final GameEngine engine = new GameEngine();
     private final List<String> commandHistory = new ArrayList<>();
     private final Map<String, Image> iconCache = new HashMap<>();
     private int historyIndex = 0;
+    private CombatSnapshot currentCombatSnapshot;
 
     @FXML
     private Label locationPromptLabel;
@@ -54,6 +63,24 @@ public class MajorGameController {
 
     @FXML
     private TextField commandField;
+
+    @FXML
+    private HBox commandPanel;
+
+    @FXML
+    private StackPane battlePane;
+
+    @FXML
+    private GridPane battleGrid;
+
+    @FXML
+    private VBox battleActionBox;
+
+    @FXML
+    private FlowPane battleActionsPane;
+
+    @FXML
+    private Label battleStatusLabel;
 
     @FXML
     private void initialize() {
@@ -116,6 +143,7 @@ public class MajorGameController {
             outputArea.appendText(message + System.lineSeparator());
         }
         outputArea.appendText(System.lineSeparator());
+        updateBattleStatus(result);
         renderState(result.snapshot());
     }
 
@@ -126,6 +154,118 @@ public class MajorGameController {
         juiceBar.setProgress(normalizeStatus(snapshot.appleJuice()));
         honorBar.setProgress(normalizeStatus(snapshot.honor()));
         renderInventory(snapshot.inventory());
+        renderMode(snapshot);
+    }
+
+    private void renderMode(GameSnapshot snapshot) {
+        boolean inCombat = snapshot.inCombat() && snapshot.combatSnapshot() != null;
+        outputArea.setVisible(!inCombat);
+        outputArea.setManaged(!inCombat);
+        commandPanel.setVisible(!inCombat);
+        commandPanel.setManaged(!inCombat);
+        battlePane.setVisible(inCombat);
+        battlePane.setManaged(inCombat);
+
+        if (!inCombat) {
+            currentCombatSnapshot = null;
+            battleGrid.getChildren().clear();
+            return;
+        }
+
+        currentCombatSnapshot = snapshot.combatSnapshot();
+        if (battleStatusLabel.getText() == null || battleStatusLabel.getText().isBlank()) {
+            battleStatusLabel.setText(currentCombatSnapshot.statusText());
+        }
+        renderBattleGrid(currentCombatSnapshot);
+        renderBattleActions(currentCombatSnapshot);
+    }
+
+    private void renderBattleGrid(CombatSnapshot snapshot) {
+        battleGrid.getChildren().clear();
+        for (int row = 0; row < snapshot.rows(); row++) {
+            for (int col = 0; col < snapshot.cols(); col++) {
+                final int tileRow = row;
+                final int tileCol = col;
+                StackPane tile = new StackPane();
+                tile.getStyleClass().add("battle-tile");
+                tile.setMinSize(BATTLE_TILE_SIZE, BATTLE_TILE_SIZE);
+                tile.setPrefSize(BATTLE_TILE_SIZE, BATTLE_TILE_SIZE);
+                tile.setMaxSize(BATTLE_TILE_SIZE, BATTLE_TILE_SIZE);
+                tile.setOnMouseClicked(event -> onBattleTileClicked(tileRow, tileCol));
+
+                CombatTile tileRef = new CombatTile(tileRow, tileCol);
+                if (snapshot.reachableTiles().contains(tileRef)) {
+                    tile.getStyleClass().add("battle-tile-reachable");
+                }
+                if (snapshot.targetableTiles().contains(tileRef)) {
+                    tile.getStyleClass().add("battle-tile-targetable");
+                }
+
+                CombatUnitSnapshot unit = findUnitAt(snapshot, tileRow, tileCol);
+                if (unit != null) {
+                    Label unitLabel = new Label(unit.player() ? "P" : "E");
+                    unitLabel.getStyleClass().add(unit.player() ? "battle-unit-player" : "battle-unit-enemy");
+                    Label hpLabel = new Label(unit.hp() + "/" + unit.maxHp());
+                    hpLabel.getStyleClass().add("battle-unit-hp");
+                    VBox unitNode = new VBox(2, unitLabel, hpLabel);
+                    unitNode.getStyleClass().add("battle-unit");
+                    tile.getChildren().add(unitNode);
+                }
+                battleGrid.add(tile, tileCol, tileRow);
+            }
+        }
+    }
+
+    private void renderBattleActions(CombatSnapshot snapshot) {
+        boolean showActionBox = snapshot.playerTurn() && snapshot.selectedAbilityId() == null;
+        battleActionBox.setVisible(showActionBox);
+        battleActionBox.setManaged(showActionBox);
+        battleActionsPane.getChildren().clear();
+        if (!showActionBox) {
+            return;
+        }
+        for (String abilityId : snapshot.playerAbilityIds()) {
+            Button abilityButton = new Button(formatItemName(abilityId));
+            abilityButton.getStyleClass().add("battle-action-button");
+            abilityButton.setOnAction(event -> appendResult(engine.combatSelectAbility(abilityId)));
+            battleActionsPane.getChildren().add(abilityButton);
+        }
+    }
+
+    private CombatUnitSnapshot findUnitAt(CombatSnapshot snapshot, int row, int col) {
+        for (CombatUnitSnapshot unit : snapshot.units()) {
+            if (unit.row() == row && unit.col() == col) {
+                return unit;
+            }
+        }
+        return null;
+    }
+
+    private void onBattleTileClicked(int row, int col) {
+        if (currentCombatSnapshot == null) {
+            return;
+        }
+        GameResult result = currentCombatSnapshot.selectedAbilityId() == null
+                ? engine.combatMovePlayer(row, col)
+                : engine.combatTargetAt(row, col);
+        appendResult(result);
+    }
+
+    private void updateBattleStatus(GameResult result) {
+        if (!result.snapshot().inCombat() || battleStatusLabel == null) {
+            return;
+        }
+        String status = result.snapshot().combatSnapshot() != null
+                ? result.snapshot().combatSnapshot().statusText()
+                : "";
+        for (int index = result.messages().size() - 1; index >= 0; index--) {
+            String message = result.messages().get(index);
+            if (!message.isBlank()) {
+                status = message;
+                break;
+            }
+        }
+        battleStatusLabel.setText(status);
     }
 
     private double normalizeStatus(int value) {
