@@ -1,8 +1,14 @@
 abilities:
+
+  # Major
+
   punch:
     name: "Punch"
     damage: 5
     range: 1
+
+  # Old Man
+
   cane_strike:
     name: "Cane Strike"
     damage: 4

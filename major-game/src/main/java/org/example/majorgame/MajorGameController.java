@@ -83,6 +83,9 @@ public class MajorGameController {
     private Label battleStatusLabel;
 
     @FXML
+    private Button battleEndTurnButton;
+
+    @FXML
     private void initialize() {
         appendResult(engine.openingScene());
         historyIndex = commandHistory.size();
@@ -169,6 +172,8 @@ public class MajorGameController {
         if (!inCombat) {
             currentCombatSnapshot = null;
             battleGrid.getChildren().clear();
+            battleEndTurnButton.setVisible(false);
+            battleEndTurnButton.setManaged(false);
             return;
         }
 
@@ -176,6 +181,8 @@ public class MajorGameController {
         if (battleStatusLabel.getText() == null || battleStatusLabel.getText().isBlank()) {
             battleStatusLabel.setText(currentCombatSnapshot.statusText());
         }
+        battleEndTurnButton.setVisible(currentCombatSnapshot.endTurnAvailable());
+        battleEndTurnButton.setManaged(currentCombatSnapshot.endTurnAvailable());
         renderBattleGrid(currentCombatSnapshot);
         renderBattleActions(currentCombatSnapshot);
     }
@@ -217,7 +224,7 @@ public class MajorGameController {
     }
 
     private void renderBattleActions(CombatSnapshot snapshot) {
-        boolean showActionBox = snapshot.playerTurn() && snapshot.selectedAbilityId() == null;
+        boolean showActionBox = snapshot.playerTurn() && snapshot.selectedAbilityId() == null && !snapshot.turnLocked();
         battleActionBox.setVisible(showActionBox);
         battleActionBox.setManaged(showActionBox);
         battleActionsPane.getChildren().clear();
@@ -249,6 +256,11 @@ public class MajorGameController {
                 ? engine.combatMovePlayer(row, col)
                 : engine.combatTargetAt(row, col);
         appendResult(result);
+    }
+
+    @FXML
+    protected void onBattleEndTurnClicked() {
+        appendResult(engine.combatEndTurn());
     }
 
     private void updateBattleStatus(GameResult result) {

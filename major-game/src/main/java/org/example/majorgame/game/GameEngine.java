@@ -62,7 +62,7 @@ public final class GameEngine {
                 case "die", "halt" -> die();
                 case "instructions" -> resultOf(List.of(
                         "You are in combat. Use the battle grid and action box.",
-                        "Combat commands: click tile to move, choose ability, click target."
+                        "Combat commands: click tile to move, choose ability, click target, then End Turn."
                 ));
                 default -> resultOf(List.of("You are in combat. Use the battle controls."));
             };
@@ -138,6 +138,16 @@ public final class GameEngine {
             return resultOf(List.of("No active combat."));
         }
         CombatActionResult result = activeCombat.targetAt(row, col);
+        List<String> messages = new ArrayList<>(result.messages());
+        handleCombatCompletion(messages);
+        return resultOf(messages);
+    }
+
+    public GameResult combatEndTurn() {
+        if (activeCombat == null || activeCombat.isFinished()) {
+            return resultOf(List.of("No active combat."));
+        }
+        CombatActionResult result = activeCombat.endTurn();
         List<String> messages = new ArrayList<>(result.messages());
         handleCombatCompletion(messages);
         return resultOf(messages);

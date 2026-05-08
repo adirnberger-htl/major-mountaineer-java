@@ -46,6 +46,8 @@
                     <Label fx:id="battleStatusLabel" text="Choose your move." wrapText="true" styleClass="battle-status-label"/>
                     <FlowPane fx:id="battleActionsPane" hgap="8.0" vgap="8.0"/>
                 </VBox>
+                <Button fx:id="battleEndTurnButton" text="End Turn" onAction="#onBattleEndTurnClicked"
+                        styleClass="battle-end-turn-button" StackPane.alignment="BOTTOM_CENTER"/>
             </StackPane>
         </StackPane>
     </center>

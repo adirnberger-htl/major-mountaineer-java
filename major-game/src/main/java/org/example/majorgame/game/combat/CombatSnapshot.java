@@ -8,6 +8,8 @@ public record CombatSnapshot(
         int cols,
         List<CombatUnitSnapshot> units,
         boolean playerTurn,
+        boolean turnLocked,
+        boolean endTurnAvailable,
         int playerMovesRemaining,
         List<String> playerAbilityIds,
         String selectedAbilityId,

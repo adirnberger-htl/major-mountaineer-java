@@ -226,3 +226,8 @@
 .battle-action-button {
     -fx-min-width: 110;
 }
+
+.battle-end-turn-button {
+    -fx-font-weight: 700;
+    -fx-padding: 8 20 8 20;
+}

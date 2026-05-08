@@ -22,6 +22,7 @@ public final class CombatEngine {
     private int playerMoveModifier;
     private int playerMovesRemaining;
     private String selectedAbilityId;
+    private boolean turnLocked;
     private String statusText = "Choose your move.";
     private boolean finished;
     private boolean playerWon;
@@ -84,6 +85,9 @@ public final class CombatEngine {
         if (finished) {
             return new CombatActionResult(List.of("The battle is already over."));
         }
+        if (turnLocked) {
+            return new CombatActionResult(List.of("Turn is locked. Press End Turn."));
+        }
         if (selectedAbilityId != null) {
             return new CombatActionResult(List.of("Target an enemy for " + abilityName(selectedAbilityId) + "."));
         }
@@ -109,6 +113,9 @@ public final class CombatEngine {
         if (finished) {
             return new CombatActionResult(List.of("The battle is already over."));
         }
+        if (turnLocked) {
+            return new CombatActionResult(List.of("Turn is locked. Press End Turn."));
+        }
         if (!playerAbilities.contains(abilityId)) {
             return new CombatActionResult(List.of("Ability not available."));
         }
@@ -123,6 +130,9 @@ public final class CombatEngine {
     public CombatActionResult targetAt(int row, int col) {
         if (finished) {
             return new CombatActionResult(List.of("The battle is already over."));
+        }
+        if (turnLocked) {
+            return new CombatActionResult(List.of("Turn is locked. Press End Turn."));
         }
         if (selectedAbilityId == null) {
             return new CombatActionResult(List.of("Choose an ability first."));
@@ -150,6 +160,22 @@ public final class CombatEngine {
             return new CombatActionResult(List.copyOf(messages));
         }
 
+        turnLocked = true;
+        playerMovesRemaining = 0;
+        statusText = "Action locked. Press End Turn to continue.";
+        messages.add("Action locked. Press End Turn.");
+        return new CombatActionResult(List.copyOf(messages));
+    }
+
+    public CombatActionResult endTurn() {
+        if (finished) {
+            return new CombatActionResult(List.of("The battle is already over."));
+        }
+        List<String> messages = new ArrayList<>();
+        if (selectedAbilityId != null) {
+            selectedAbilityId = null;
+            messages.add("Ability selection canceled.");
+        }
         enemyTurn(messages);
         if (player.hp <= 0) {
             finished = true;
@@ -158,9 +184,19 @@ public final class CombatEngine {
             messages.add("Major collapses in battle.");
             return new CombatActionResult(List.copyOf(messages));
         }
-
+        if (livingEnemies().isEmpty()) {
+            finished = true;
+            playerWon = true;
+            statusText = "Victory!";
+            messages.add("You won the fight.");
+            return new CombatActionResult(List.copyOf(messages));
+        }
+        turnLocked = false;
         playerMovesRemaining = effectivePlayerMoves();
         statusText = "Your turn.";
+        if (messages.isEmpty()) {
+            messages.add("Turn ended.");
+        }
         return new CombatActionResult(List.copyOf(messages));
     }
 
@@ -199,6 +235,8 @@ public final class CombatEngine {
                 encounter.rows(),
                 encounter.cols(),
                 List.copyOf(units),
+                !finished,
+                turnLocked,
                 !finished,
                 playerMovesRemaining,
                 List.copyOf(playerAbilities),
@@ -278,7 +316,7 @@ public final class CombatEngine {
     }
 
     private Set<CombatTile> reachableTiles() {
-        if (finished || selectedAbilityId != null || playerMovesRemaining <= 0) {
+        if (finished || turnLocked || selectedAbilityId != null || playerMovesRemaining <= 0) {
             return Set.of();
         }
         Set<CombatTile> tiles = new LinkedHashSet<>();
@@ -290,7 +328,7 @@ public final class CombatEngine {
     }
 
     private Set<CombatTile> targetableTiles() {
-        if (finished || selectedAbilityId == null) {
+        if (finished || turnLocked || selectedAbilityId == null) {
             return Set.of();
         }
         int range = catalog.ability(selectedAbilityId).range();

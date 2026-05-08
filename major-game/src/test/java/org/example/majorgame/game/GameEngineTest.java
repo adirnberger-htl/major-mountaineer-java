@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameEngineTest {
@@ -146,5 +147,20 @@ class GameEngineTest {
         assertTrue(result.snapshot().inCombat());
         assertTrue(result.messages().stream().anyMatch(line -> line.contains("Old Man")));
         assertTrue(result.snapshot().combatSnapshot().playerAbilityIds().contains("punch"));
+    }
+
+    @Test
+    void endTurnCanBeUsedAnytimeDuringCombat() {
+        GameEngine engine = new GameEngine();
+        engine.executeCommand("n");
+        engine.executeCommand("e");
+        engine.executeCommand("n");
+
+        engine.combatSelectAbility("punch");
+        GameResult endTurnResult = engine.combatEndTurn();
+
+        assertTrue(endTurnResult.snapshot().inCombat());
+        assertNull(endTurnResult.snapshot().combatSnapshot().selectedAbilityId());
+        assertTrue(endTurnResult.messages().stream().anyMatch(line -> line.contains("Ability selection canceled.")));
     }
 }
