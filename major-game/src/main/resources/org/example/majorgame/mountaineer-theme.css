@@ -13,6 +13,10 @@
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
 }
 
+.root-pane.hohe-dirn-bg {
+    -fx-background-image: url("images/pathway-majorgame.png");
+}
+
 .status-panel {
     -fx-background-color: -panel-bg;
     -fx-background-radius: 12;

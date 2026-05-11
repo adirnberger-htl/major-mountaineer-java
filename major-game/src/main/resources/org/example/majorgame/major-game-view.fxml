@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController"
+<BorderPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController"
             styleClass="root-pane">
     <padding>
         <Insets bottom="12.0" left="12.0" right="12.0" top="12.0"/>

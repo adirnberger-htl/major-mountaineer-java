@@ -10,6 +10,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -33,12 +34,16 @@ public class MajorGameController {
     private static final int STATUS_MAX = 100;
     private static final String ICON_PATH_PREFIX = "/org/example/majorgame/icons/";
     private static final int BATTLE_TILE_SIZE = 64;
+    private static final String HOHE_DIRN_BACKDROP_CLASS = "hohe-dirn-bg";
 
     private final GameEngine engine = new GameEngine();
     private final List<String> commandHistory = new ArrayList<>();
     private final Map<String, Image> iconCache = new HashMap<>();
     private int historyIndex = 0;
     private CombatSnapshot currentCombatSnapshot;
+
+    @FXML
+    private BorderPane rootPane;
 
     @FXML
     private Label locationPromptLabel;
@@ -157,7 +162,22 @@ public class MajorGameController {
         juiceBar.setProgress(normalizeStatus(snapshot.appleJuice()));
         honorBar.setProgress(normalizeStatus(snapshot.honor()));
         renderInventory(snapshot.inventory());
+        updateBackdrop(snapshot.locationId());
         renderMode(snapshot);
+    }
+
+    private void updateBackdrop(String locationId) {
+        if (rootPane == null) {
+            return;
+        }
+        boolean usePathwayBackdrop = "hohe_dirn".equals(locationId) || locationId.startsWith("hd_");
+        if (usePathwayBackdrop) {
+            if (!rootPane.getStyleClass().contains(HOHE_DIRN_BACKDROP_CLASS)) {
+                rootPane.getStyleClass().add(HOHE_DIRN_BACKDROP_CLASS);
+            }
+            return;
+        }
+        rootPane.getStyleClass().remove(HOHE_DIRN_BACKDROP_CLASS);
     }
 
     private void renderMode(GameSnapshot snapshot) {

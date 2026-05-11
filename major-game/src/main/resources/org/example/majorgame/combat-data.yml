@@ -32,15 +32,18 @@ enemyTypes:
     weapon: "walking_cane"
 
 encounters:
-  hd_slums_old_man:
-    location: "hd_slums"
-    rows: 5
-    cols: 7
+
+  # Hohe Dirn first fight
+
+  hd_homeless_old_man:
+    location: "hd_homeless"
+    rows: 4
+    cols: 4
     playerStart:
-      row: 4
+      row: 3
       col: 1
     enemies:
       - id: "old_man_1"
         type: "old_man"
-        row: 0
-        col: 5
+        row: 1
+        col: 3
