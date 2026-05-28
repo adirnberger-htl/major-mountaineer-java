@@ -1,12 +1,16 @@
 # Major Mountaineer
 
-You are a mountaineer named major and you are a lonely apple juice addict. In your endless lonelyness you decide to do what you do best, climb mountains and drink apple juice. You hope that maybe one day, you'll meet salvation atop one of the many mountains you climb. So you keep climbing and you keep drinking your apple juice.
+You are a mountaineer named major and you are a lonely apple juice addict. In your endless lonelyness you decide to do
+what you do best, climb mountains and drink apple juice. You hope that maybe one day, you'll meet salvation atop one of
+the many mountains you climb. So you keep climbing and you keep drinking your apple juice.
 
 ## Game Mechanics
 
 ### General
 
-This is a text based adventure game, you walk along the well known mountain pass for as long as you can. You arrive at the base-camp of the Hohe Dirn, from this point forth you will be the first human to have ever wandered these lands ... or are you?
+This is a text based adventure game, you walk along the well known mountain pass for as long as you can. You arrive at
+the base-camp of the Hohe Dirn, from this point forth you will be the first human to have ever wandered
+these lands ... or are you?
 
 ### Apple Juice Meter
 

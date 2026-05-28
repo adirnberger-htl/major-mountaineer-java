@@ -37,6 +37,7 @@ javafx {
 
 dependencies {
     implementation("org.yaml:snakeyaml:2.2")
+    implementation("org.xerial:sqlite-jdbc:3.45.2.0")
     testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

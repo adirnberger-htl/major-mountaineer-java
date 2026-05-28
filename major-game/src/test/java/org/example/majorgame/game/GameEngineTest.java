@@ -3,6 +3,7 @@ package org.example.majorgame;
 import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameEngineTest {
+    @BeforeAll
+    static void disablePersistence() {
+        System.setProperty("majorgame.persistence", "disabled");
+    }
+
     @Test
     void startsInMudHuzzWithFullJuice() {
         GameEngine engine = new GameEngine();

@@ -1,8 +1,13 @@
 package org.example.majorgame;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -39,8 +44,12 @@ public class MajorGameController {
     private final GameEngine engine = new GameEngine();
     private final List<String> commandHistory = new ArrayList<>();
     private final Map<String, Image> iconCache = new HashMap<>();
+    private final ObservableList<String> inventoryItems = FXCollections.observableArrayList();
+    private final FilteredList<String> filteredInventoryItems = new FilteredList<>(inventoryItems);
+    private final SortedList<String> sortedInventoryItems = new SortedList<>(filteredInventoryItems, Comparator.naturalOrder());
     private int historyIndex = 0;
     private CombatSnapshot currentCombatSnapshot;
+    private String selectedInventoryItemId;
 
     @FXML
     private BorderPane rootPane;
@@ -62,6 +71,9 @@ public class MajorGameController {
 
     @FXML
     private FlowPane inventoryIconsPane;
+
+    @FXML
+    private ListView<String> inventoryListView;
 
     @FXML
     private TextArea outputArea;
@@ -94,6 +106,7 @@ public class MajorGameController {
     private void initialize() {
         appendResult(engine.openingScene());
         historyIndex = commandHistory.size();
+        setupInventoryListView();
     }
 
     @FXML
@@ -307,15 +320,26 @@ public class MajorGameController {
 
     private void renderInventory(Set<String> inventory) {
         inventoryIconsPane.getChildren().clear();
-        if (inventory.isEmpty()) {
+        inventoryItems.setAll(inventory);
+        if (sortedInventoryItems.isEmpty()) {
             Label emptyLabel = new Label("No gear collected yet.");
             emptyLabel.getStyleClass().add("inventory-empty");
             inventoryIconsPane.getChildren().add(emptyLabel);
+            if (inventoryListView != null) {
+                inventoryListView.getSelectionModel().clearSelection();
+            }
+            selectedInventoryItemId = null;
             return;
         }
 
-        inventory.stream()
-                .sorted(Comparator.naturalOrder())
+        if (inventoryListView != null
+                && selectedInventoryItemId != null
+                && !sortedInventoryItems.contains(selectedInventoryItemId)) {
+            inventoryListView.getSelectionModel().clearSelection();
+            selectedInventoryItemId = null;
+        }
+
+        sortedInventoryItems.stream()
                 .map(this::createInventoryItemNode)
                 .forEach(inventoryIconsPane.getChildren()::add);
     }
@@ -323,6 +347,11 @@ public class MajorGameController {
     private VBox createInventoryItemNode(String itemId) {
         VBox card = new VBox(6);
         card.getStyleClass().add("inventory-item");
+        card.setOnMouseClicked(event -> {
+            if (inventoryListView != null) {
+                inventoryListView.getSelectionModel().select(itemId);
+            }
+        });
 
         Image itemIcon = loadItemIcon(itemId);
         if (itemIcon != null) {
@@ -379,5 +408,16 @@ public class MajorGameController {
             value = value.substring(0, value.length() - 1).trim();
         }
         return value;
+    }
+
+    private void setupInventoryListView() {
+        if (inventoryListView == null) {
+            return;
+        }
+        filteredInventoryItems.setPredicate(itemId -> itemId != null && !itemId.isBlank());
+        inventoryListView.setItems(sortedInventoryItems);
+        inventoryListView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((obs, oldValue, newValue) -> selectedInventoryItemId = newValue);
     }
 }

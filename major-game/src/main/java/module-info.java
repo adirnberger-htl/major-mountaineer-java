@@ -1,6 +1,8 @@
 module org.example.majorgame {
+    requires java.sql;
     requires javafx.controls;
     requires javafx.fxml;
+    requires org.xerial.sqlitejdbc;
     requires org.yaml.snakeyaml;
 
 

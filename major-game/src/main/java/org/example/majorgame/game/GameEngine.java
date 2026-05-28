@@ -7,6 +7,7 @@ import org.example.majorgame.game.combat.CombatSnapshot;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public final class GameEngine {
     private static final CombatDataCatalog COMBAT_DATA = CombatDataCatalog.defaultCatalog();
 
     private final GameWorld world = GameWorld.createDefault();
+    private final GameSaveRepository saveRepository = GameSaveRepository.createDefault();
     private final Set<String> clearedCombatLocations = new LinkedHashSet<>();
 
     private String location;
@@ -42,7 +44,12 @@ public final class GameEngine {
     private CombatEngine activeCombat;
 
     public GameEngine() {
-        reset();
+        GameSaveState savedState = saveRepository.load().orElse(null);
+        if (savedState == null) {
+            reset();
+        } else {
+            applySaveState(savedState);
+        }
     }
 
     public void setCheckpoint(String roomId) {
@@ -433,7 +440,9 @@ public final class GameEngine {
     private GameResult resultOf(List<String> messages) {
         boolean gameOver = clearOutputOnNextResult;
         clearOutputOnNextResult = false;
-        return new GameResult(List.copyOf(messages), snapshot(gameOver));
+        GameResult result = new GameResult(List.copyOf(messages), snapshot(gameOver));
+        persistStateIfNeeded();
+        return result;
     }
 
     private void reset() {
@@ -451,5 +460,54 @@ public final class GameEngine {
         clearOutputOnNextResult = false;
         activeCombat = null;
         clearedCombatLocations.clear();
+    }
+
+    private void persistStateIfNeeded() {
+        if (activeCombat != null && !activeCombat.isFinished()) {
+            return;
+        }
+        saveRepository.save(buildSaveState());
+    }
+
+    private GameSaveState buildSaveState() {
+        return new GameSaveState(
+                location,
+                checkpointLocation,
+                appleJuice,
+                honor,
+                zeroJuiceTurns,
+                commandsSinceRespawn,
+                movesSinceRespawn,
+                appleJuicesDrunkSinceRespawn,
+                deathCount,
+                Set.copyOf(inventory),
+                Map.copyOf(itemLocations),
+                Set.copyOf(clearedCombatLocations)
+        );
+    }
+
+    private void applySaveState(GameSaveState state) {
+        if (state.locationId() == null || world.room(state.locationId()) == null) {
+            throw new IllegalStateException("Saved location is invalid: " + state.locationId());
+        }
+        if (state.checkpointLocationId() == null || world.room(state.checkpointLocationId()) == null) {
+            throw new IllegalStateException("Saved checkpoint is invalid: " + state.checkpointLocationId());
+        }
+        location = state.locationId();
+        checkpointLocation = state.checkpointLocationId();
+        itemLocations = new LinkedHashMap<>(state.itemLocations());
+        inventory.clear();
+        inventory.addAll(state.inventory());
+        appleJuice = state.appleJuice();
+        zeroJuiceTurns = state.zeroJuiceTurns();
+        honor = state.honor();
+        commandsSinceRespawn = state.commandsSinceRespawn();
+        movesSinceRespawn = state.movesSinceRespawn();
+        appleJuicesDrunkSinceRespawn = state.appleJuicesDrunkSinceRespawn();
+        deathCount = state.deathCount();
+        clearOutputOnNextResult = false;
+        activeCombat = null;
+        clearedCombatLocations.clear();
+        clearedCombatLocations.addAll(state.clearedCombatLocations());
     }
 }
