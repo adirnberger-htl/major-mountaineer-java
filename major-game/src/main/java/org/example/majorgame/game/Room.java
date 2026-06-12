@@ -6,6 +6,7 @@ record Room(
         String id,
         String title,
         List<String> descriptionLines,
+        List<String> dialogLines,
         String autoRouteMessage,
         Direction autoRouteDirection
 ) {

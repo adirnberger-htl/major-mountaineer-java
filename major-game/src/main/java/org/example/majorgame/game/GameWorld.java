@@ -29,6 +29,7 @@ final class GameWorld {
                     roomId,
                     locationText.title(),
                     locationText.descriptionLines(),
+                    locationText.dialogLines(),
                     locationText.autoRouteMessage(),
                     locationText.autoRouteDirection()
             ));
@@ -50,8 +51,9 @@ final class GameWorld {
                 throw new IllegalStateException("Path source room is unknown: " + from);
             }
             for (String to : fromEntry.getValue().values()) {
-                if (!rooms.containsKey(to)) {
-                    throw new IllegalStateException("Path target room is unknown: " + to);
+                String targetRoomId = to.split("\\|", 2)[0];
+                if (!rooms.containsKey(targetRoomId)) {
+                    throw new IllegalStateException("Path target room is unknown: " + targetRoomId);
                 }
             }
         }
@@ -72,7 +74,24 @@ final class GameWorld {
     }
 
     String nextLocation(String from, Direction direction) {
-        return paths.getOrDefault(from, Map.of()).get(direction);
+        String rawTarget = paths.getOrDefault(from, Map.of()).get(direction);
+        if (rawTarget == null) return null;
+        return rawTarget.split("\\|", 2)[0];
+    }
+
+    Map<Direction, String> availableExits(String roomId) {
+        Map<Direction, String> roomPaths = paths.getOrDefault(roomId, Map.of());
+        Map<Direction, String> exits = new LinkedHashMap<>();
+        for (Map.Entry<Direction, String> entry : roomPaths.entrySet()) {
+            String rawTarget = entry.getValue();
+            String[] parts = rawTarget.split("\\|", 2);
+            Room dest = room(parts[0]);
+            if (dest != null) {
+                String desc = parts.length > 1 ? " - " + parts[1] : "";
+                exits.put(entry.getKey(), dest.title() + desc);
+            }
+        }
+        return exits;
     }
 
     Map<String, String> initialItemLocations() {

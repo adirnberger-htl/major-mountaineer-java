@@ -1,0 +1,16 @@
+src/main/java/org/example/majorgame/game/GameWorld.java
+src/main/java/org/example/majorgame/game/GameEngine.java
+src/main/java/org/example/majorgame/game/Room.java
+src/main/java/org/example/majorgame/game/Direction.java
+src/main/java/org/example/majorgame/game/combat/CombatSnapshot.java
+src/main/java/org/example/majorgame/game/combat/CombatUnitSnapshot.java
+src/main/java/org/example/majorgame/game/combat/CombatDataCatalog.java
+src/main/java/org/example/majorgame/game/combat/CombatActionResult.java
+src/main/java/org/example/majorgame/game/combat/CombatTile.java
+src/main/java/org/example/majorgame/game/combat/CombatEngine.java
+src/main/java/org/example/majorgame/game/GameTextCatalog.java
+src/main/java/org/example/majorgame/game/GameResult.java
+src/main/java/org/example/majorgame/game/GameSnapshot.java
+src/main/java/org/example/majorgame/MajorGameApplication.java
+src/main/java/org/example/majorgame/Launcher.java
+src/main/java/org/example/majorgame/MajorGameController.java

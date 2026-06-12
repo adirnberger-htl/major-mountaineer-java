@@ -82,12 +82,13 @@ final class GameTextCatalog {
             Map<String, Object> locationNode = asMap(entry.getValue(), "locations." + locationId);
             String title = asString(locationNode.get("title"), "locations." + locationId + ".title");
             List<String> description = asStringList(locationNode.get("description"), "locations." + locationId + ".description");
+            List<String> dialog = optionalStringList(locationNode.get("dialog"), "locations." + locationId + ".dialog");
             String autoRouteMessage = optionalString(locationNode.get("autoRouteMessage"), "locations." + locationId + ".autoRouteMessage");
             Direction autoRouteDirection = optionalDirection(
                     locationNode.get("autoRouteDirection"),
                     "locations." + locationId + ".autoRouteDirection"
             );
-            locations.put(locationId, new LocationText(title, description, autoRouteMessage, autoRouteDirection));
+            locations.put(locationId, new LocationText(title, description, dialog, autoRouteMessage, autoRouteDirection));
         }
 
         Map<String, Object> pathsNode = asMap(root.get("paths"), "paths");
@@ -167,9 +168,17 @@ final class GameTextCatalog {
         throw new IllegalStateException("Expected string list at '" + fieldPath + "'.");
     }
 
+    private static List<String> optionalStringList(Object value, String fieldPath) {
+        if (value == null) {
+            return List.of();
+        }
+        return asStringList(value, fieldPath);
+    }
+
     record LocationText(
             String title,
             List<String> descriptionLines,
+            List<String> dialogLines,
             String autoRouteMessage,
             Direction autoRouteDirection
     ) {
