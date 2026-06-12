@@ -118,24 +118,37 @@
     -fx-alignment: center;
 }
 
+.instruction-item {
+    -fx-font-size: 16px;
+    -fx-text-fill: #E0E0E0;
+}
+
+.instruction-command {
+    -fx-font-size: 16px;
+    -fx-text-fill: #FFAA00;
+    -fx-font-weight: bold;
+}
+
 .notification-label {
     -fx-font-size: 16px;
-    -fx-font-weight: 700;
-    -fx-padding: 10 16 10 16;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-font-family: "Courier New";
+    -fx-padding: 12 24 12 24;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-width: 0 0 0 6;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 4);
 }
 
 .notification-info {
-    -fx-text-fill: #9be18a;
-    -fx-background-color: rgba(75, 132, 200, 0.85);
-    -fx-border-color: rgba(192, 215, 230, 0.9);
+    -fx-background-color: rgba(20, 35, 45, 0.95);
+    -fx-border-color: #44AAFF;
+    -fx-text-fill: #CCEEFF;
 }
 
 .notification-error {
-    -fx-text-fill: #f2aa9f;
-    -fx-background-color: rgba(183, 71, 71, 0.85);
-    -fx-border-color: rgba(242, 170, 159, 0.9);
+    -fx-background-color: rgba(50, 15, 15, 0.95);
+    -fx-border-color: #FF4444;
+    -fx-text-fill: #FFCCCC;
 }
 
 .section-heading {

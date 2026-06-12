@@ -97,4 +97,20 @@ final class GameWorld {
     Map<String, String> initialItemLocations() {
         return new LinkedHashMap<>(initialItemLocations);
     }
+
+    void appendDialog(String roomId, String message) {
+        Room current = rooms.get(roomId);
+        if (current != null) {
+            java.util.List<String> newDialogs = new java.util.ArrayList<>(current.dialogLines());
+            newDialogs.add(message);
+            rooms.put(roomId, new Room(
+                    current.id(),
+                    current.title(),
+                    current.descriptionLines(),
+                    java.util.List.copyOf(newDialogs),
+                    current.autoRouteMessage(),
+                    current.autoRouteDirection()
+            ));
+        }
+    }
 }

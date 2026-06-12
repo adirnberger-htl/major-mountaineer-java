@@ -22,7 +22,7 @@
         </padding>
 
         <top>
-            <VBox spacing="12.0">
+            <VBox fx:id="topPanel" spacing="12.0">
                 <Label fx:id="locationTitleLabel" styleClass="location-title" text="Location Title" maxWidth="Infinity" alignment="CENTER"/>
                 
                 <VBox spacing="8.0" styleClass="directions-box">
@@ -33,31 +33,33 @@
         </top>
 
     <center>
-        <StackPane>
-            <VBox fx:id="mainContentBox" spacing="12.0" styleClass="main-content-box" StackPane.alignment="TOP_CENTER">
-                <StackPane.margin>
-                    <Insets top="12.0" bottom="12.0" left="0.0" right="0.0"/>
-                </StackPane.margin>
-                <VBox spacing="4.0" styleClass="description-box">
-                    <Label text="Location Description:" styleClass="section-heading"/>
-                    <Label fx:id="descriptionArea" wrapText="true" minHeight="-Infinity" styleClass="description-text"/>
-                </VBox>
-
-                <VBox spacing="4.0" styleClass="dialog-box" VBox.vgrow="ALWAYS">
-                    <Label text="NPC Dialogues:" styleClass="section-heading"/>
-                    <ListView fx:id="dialogListView" styleClass="dialog-list"/>
-                </VBox>
+        <VBox fx:id="mainContentBox" spacing="12.0" styleClass="main-content-box">
+            <padding>
+                <Insets top="12.0" bottom="12.0" left="0.0" right="0.0"/>
+            </padding>
+            <VBox fx:id="descriptionContainer" spacing="4.0" styleClass="description-box">
+                <Label text="Location Description:" styleClass="section-heading"/>
+                <Label fx:id="descriptionArea" wrapText="true" minHeight="-Infinity" styleClass="description-text"/>
             </VBox>
 
-            <StackPane fx:id="battlePane" visible="false" managed="false" styleClass="battle-pane">
-                <GridPane fx:id="battleGrid" styleClass="battle-grid"/>
-                <VBox fx:id="battleActionBox" spacing="8.0" styleClass="battle-action-box" StackPane.alignment="BOTTOM_RIGHT" managed="false" visible="false">
-                    <Label fx:id="battleStatusLabel" text="Choose your move." wrapText="true" styleClass="battle-status-label"/>
-                    <FlowPane fx:id="battleActionsPane" hgap="8.0" vgap="8.0"/>
+            <HBox fx:id="battlePane" visible="false" managed="false" spacing="48.0" styleClass="battle-pane" VBox.vgrow="ALWAYS" alignment="CENTER">
+                <VBox alignment="CENTER" minWidth="400.0">
+                    <GridPane fx:id="battleGrid" styleClass="battle-grid" alignment="CENTER"/>
                 </VBox>
-                <Button fx:id="battleEndTurnButton" text="End Turn" onAction="#onBattleEndTurnClicked" styleClass="battle-end-turn-button" StackPane.alignment="BOTTOM_CENTER"/>
-            </StackPane>
-        </StackPane>
+                <VBox alignment="CENTER_LEFT" spacing="16.0" minWidth="250.0" prefWidth="250.0">
+                    <VBox fx:id="battleActionBox" spacing="16.0" styleClass="battle-action-box" alignment="CENTER_LEFT" managed="false" visible="false">
+                        <Label fx:id="battleStatusLabel" text="Choose your move." wrapText="true" styleClass="battle-status-label"/>
+                        <FlowPane fx:id="battleActionsPane" hgap="8.0" vgap="8.0" alignment="CENTER_LEFT" prefWrapLength="200"/>
+                    </VBox>
+                    <Button fx:id="battleEndTurnButton" text="End Turn" onAction="#onBattleEndTurnClicked" styleClass="battle-end-turn-button" maxWidth="Infinity" managed="false" visible="false"/>
+                </VBox>
+            </HBox>
+
+            <VBox spacing="4.0" styleClass="dialog-box" VBox.vgrow="ALWAYS">
+                <Label text="NPC Dialogues:" styleClass="section-heading"/>
+                <ListView fx:id="dialogListView" styleClass="dialog-list" VBox.vgrow="ALWAYS"/>
+            </VBox>
+        </VBox>
     </center>
 
     <bottom>
@@ -73,7 +75,7 @@
                 </VBox>
             </HBox>
 
-            <HBox spacing="12.0">
+            <HBox fx:id="inventoryPanel" spacing="12.0">
                 <VBox spacing="4.0" styleClass="items-box" HBox.hgrow="ALWAYS">
                     <Label text="Items on Ground:" styleClass="section-heading"/>
                     <FlowPane fx:id="groundItemsPane" hgap="8.0" vgap="8.0" styleClass="items-grid"/>

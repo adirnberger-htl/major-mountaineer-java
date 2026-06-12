@@ -95,9 +95,7 @@ public final class GameEngine {
     }
 
     public GameResult openingScene() {
-        //messages = chat
         List<String> messages = new ArrayList<>();
-        messages.addAll(instructionsText());
         return resultOf(messages);
     }
 
@@ -173,7 +171,6 @@ public final class GameEngine {
             if (location.equals(itemLocations.get(item))) {
                 itemLocations.remove(item);
                 inventory.add(item);
-                messages.add("OK.");
                 return;
             }
 
@@ -195,7 +192,6 @@ public final class GameEngine {
 
             inventory.remove(item);
             itemLocations.put(item, location);
-            messages.add("OK.");
         }, true);
     }
 
@@ -412,8 +408,10 @@ public final class GameEngine {
         if (activeCombat.playerWon()) {
             clearedCombatLocations.add(location);
             messages.add("The path is clear for now.");
+            world.appendDialog(location, "SYSTEM: Major defeated the enemy!");
             return;
         }
+        world.appendDialog(location, "SYSTEM: Major was defeated in combat.");
         triggerDeathAndRespawn(messages, "You were defeated in combat.");
     }
 

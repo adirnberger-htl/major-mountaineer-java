@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 public class MajorGameController {
     private static final int STATUS_MAX = 100;
     private static final String ICON_PATH_PREFIX = "/org/example/majorgame/icons/";
-    private static final int BATTLE_TILE_SIZE = 64;
+    private static final double BATTLE_TILE_SIZE = 80.0;
     private static final String HOHE_DIRN_BACKDROP_CLASS = "hohe-dirn-bg";
 
     private final GameEngine engine = new GameEngine();
@@ -52,11 +52,14 @@ public class MajorGameController {
     private PauseTransition notificationTimer;
 
     @FXML private BorderPane rootPane;
+    @FXML private VBox topPanel;
     @FXML private VBox mainContentBox;
     @FXML private VBox instructionsOverlay;
     @FXML private VBox instructionsListContainer;
+    @FXML private VBox descriptionContainer;
     @FXML private Label locationTitleLabel;
     @FXML private Label notificationLabel;
+    @FXML private HBox inventoryPanel;
     @FXML private VBox directionsListContainer;
     @FXML private Label descriptionArea;
     @FXML private FlowPane groundItemsPane;
@@ -71,7 +74,7 @@ public class MajorGameController {
     @FXML private TextField commandField;
     @FXML private HBox commandPanel;
 
-    @FXML private StackPane battlePane;
+    @FXML private HBox battlePane;
     @FXML private GridPane battleGrid;
     @FXML private VBox battleActionBox;
     @FXML private FlowPane battleActionsPane;
@@ -84,6 +87,19 @@ public class MajorGameController {
         setupListViews();
         appendResult(engine.openingScene());
         historyIndex = commandHistory.size();
+        
+        rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+                    if (event.getCode() == javafx.scene.input.KeyCode.TAB) {
+                        if (!commandField.isFocused() && !instructionsOverlay.isVisible()) {
+                            commandField.requestFocus();
+                            event.consume();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private void setupListViews() {
@@ -95,22 +111,62 @@ public class MajorGameController {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    HBox box = new HBox();
-                    Label msgLabel = new Label(item);
+                    HBox box = new HBox(12);
+                    Label msgLabel = new Label();
                     msgLabel.setWrapText(true);
                     msgLabel.setMaxWidth(400);
                     msgLabel.getStyleClass().add("dialog-message");
 
-                    if (item.startsWith("Major: ")) {
+                    if (item.startsWith("SYSTEM: ")) {
+                        msgLabel.setText(item.substring(8).trim());
+                        msgLabel.getStyleClass().add("dialog-system");
+                        box.setAlignment(javafx.geometry.Pos.CENTER);
+                        box.getChildren().add(msgLabel);
+                    } else if (item.startsWith("Major: ")) {
                         msgLabel.setText(item.substring(7).trim());
                         msgLabel.getStyleClass().add("dialog-major");
                         box.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+                        box.getChildren().add(msgLabel);
                     } else {
                         msgLabel.getStyleClass().add("dialog-npc");
                         box.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                        
+                        int colonIndex = item.indexOf(": ");
+                        if (colonIndex != -1) {
+                            String name = item.substring(0, colonIndex);
+                            msgLabel.setText(item.substring(colonIndex + 2).trim());
+                            
+                            String avatarPath = null;
+                            if (name.equalsIgnoreCase("Man") || name.equalsIgnoreCase("Old Man")) {
+                                avatarPath = "images/old_man_avatar.png";
+                            }
+                            
+                            if (avatarPath != null) {
+                                try {
+                                    javafx.scene.image.Image avatarImg = new javafx.scene.image.Image(getClass().getResourceAsStream(avatarPath));
+                                    javafx.scene.image.ImageView avatarView = new javafx.scene.image.ImageView(avatarImg);
+                                    avatarView.setFitWidth(44);
+                                    avatarView.setFitHeight(44);
+                                    
+                                    javafx.scene.shape.Circle clip = new javafx.scene.shape.Circle(22, 22, 22);
+                                    avatarView.setClip(clip);
+                                    
+                                    VBox avatarContainer = new VBox(avatarView);
+                                    avatarContainer.setAlignment(javafx.geometry.Pos.TOP_CENTER);
+                                    
+                                    box.getChildren().addAll(avatarContainer, msgLabel);
+                                } catch (Exception e) {
+                                    box.getChildren().add(msgLabel);
+                                }
+                            } else {
+                                box.getChildren().add(msgLabel);
+                            }
+                        } else {
+                            msgLabel.setText(item);
+                            box.getChildren().add(msgLabel);
+                        }
                     }
                     
-                    box.getChildren().add(msgLabel);
                     setGraphic(box);
                 }
             }
@@ -188,8 +244,9 @@ public class MajorGameController {
     protected void onCloseInstructions() {
         instructionsOverlay.setVisible(false);
         instructionsOverlay.setManaged(false);
-        mainContentBox.setOpacity(1.0);
-        commandPanel.setDisable(false);
+        rootPane.setOpacity(1.0);
+        rootPane.setDisable(false);
+        commandField.requestFocus();
     }
     
     private void showInstructionsOverlay() {
@@ -201,15 +258,36 @@ public class MajorGameController {
             itemBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             Label bullet = new Label("•");
             bullet.getStyleClass().add("instruction-bullet");
-            Label text = new Label(line.trim());
-            text.getStyleClass().add("instruction-item");
-            itemBox.getChildren().addAll(bullet, text);
+            
+            HBox contentBox = new HBox(12);
+            contentBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            
+            String[] parts = line.split("--", 2);
+            if (parts.length == 2) {
+                Label cmdLabel = new Label(parts[0].trim());
+                cmdLabel.getStyleClass().add("instruction-command");
+                cmdLabel.setPrefWidth(120);
+                
+                Label sepLabel = new Label("-");
+                sepLabel.getStyleClass().add("instruction-item");
+                
+                Label descLabel = new Label(parts[1].trim());
+                descLabel.getStyleClass().add("instruction-item");
+                
+                contentBox.getChildren().addAll(cmdLabel, sepLabel, descLabel);
+            } else {
+                Label text = new Label(line.trim());
+                text.getStyleClass().add("instruction-item");
+                contentBox.getChildren().add(text);
+            }
+            
+            itemBox.getChildren().addAll(bullet, contentBox);
             instructionsListContainer.getChildren().add(itemBox);
         }
         instructionsOverlay.setVisible(true);
         instructionsOverlay.setManaged(true);
-        mainContentBox.setOpacity(0.3);
-        commandPanel.setDisable(true);
+        rootPane.setOpacity(0.3);
+        rootPane.setDisable(true);
     }
 
     @FXML
@@ -310,11 +388,18 @@ public class MajorGameController {
     private void renderMode(GameSnapshot snapshot) {
         boolean inCombat = snapshot.inCombat() && snapshot.combatSnapshot() != null;
         
-        mainContentBox.setVisible(!inCombat);
-        mainContentBox.setManaged(!inCombat);
+        topPanel.setVisible(!inCombat);
+        topPanel.setManaged(!inCombat);
+
+        descriptionContainer.setVisible(!inCombat);
+        descriptionContainer.setManaged(!inCombat);
         
         commandPanel.setVisible(!inCombat);
         commandPanel.setManaged(!inCombat);
+        
+        inventoryPanel.setVisible(!inCombat);
+        inventoryPanel.setManaged(!inCombat);
+        
         battlePane.setVisible(inCombat);
         battlePane.setManaged(inCombat);
 
@@ -330,8 +415,10 @@ public class MajorGameController {
         if (battleStatusLabel.getText() == null || battleStatusLabel.getText().isBlank()) {
             battleStatusLabel.setText(currentCombatSnapshot.statusText());
         }
-        battleEndTurnButton.setVisible(currentCombatSnapshot.endTurnAvailable());
-        battleEndTurnButton.setManaged(currentCombatSnapshot.endTurnAvailable());
+        battleEndTurnButton.setVisible(true);
+        battleEndTurnButton.setManaged(true);
+        battleEndTurnButton.setDisable(!currentCombatSnapshot.endTurnAvailable());
+        
         renderBattleGrid(currentCombatSnapshot);
         renderBattleActions(currentCombatSnapshot);
     }
@@ -359,12 +446,35 @@ public class MajorGameController {
 
                 CombatUnitSnapshot unit = findUnitAt(snapshot, tileRow, tileCol);
                 if (unit != null) {
-                    Label unitLabel = new Label(unit.player() ? "P" : "E");
-                    unitLabel.getStyleClass().add(unit.player() ? "battle-unit-player" : "battle-unit-enemy");
+                    VBox unitNode = new VBox(2);
+                    unitNode.getStyleClass().add("battle-unit");
+                    unitNode.setAlignment(javafx.geometry.Pos.CENTER);
+
+                    if (unit.player()) {
+                        Label unitLabel = new Label("M");
+                        unitLabel.getStyleClass().add("battle-unit-player");
+                        unitNode.getChildren().add(unitLabel);
+                    } else {
+                        String imgName = unit.name().toLowerCase().replace(" ", "_") + "_combat.png";
+                        String imgPath = "images/" + imgName;
+                        try {
+                            javafx.scene.image.Image img = new javafx.scene.image.Image(getClass().getResourceAsStream(imgPath));
+                            javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(img);
+                            imgView.setFitWidth(BATTLE_TILE_SIZE * 0.8);
+                            imgView.setFitHeight(BATTLE_TILE_SIZE * 0.8);
+                            imgView.setPreserveRatio(true);
+                            unitNode.getChildren().add(imgView);
+                        } catch (Exception e) {
+                            Label unitLabel = new Label(unit.name().substring(0, 1));
+                            unitLabel.getStyleClass().add("battle-unit-enemy");
+                            unitNode.getChildren().add(unitLabel);
+                        }
+                    }
+                    
                     Label hpLabel = new Label(unit.hp() + "/" + unit.maxHp());
                     hpLabel.getStyleClass().add("battle-unit-hp");
-                    VBox unitNode = new VBox(2, unitLabel, hpLabel);
-                    unitNode.getStyleClass().add("battle-unit");
+                    unitNode.getChildren().add(hpLabel);
+                    
                     tile.getChildren().add(unitNode);
                 }
                 battleGrid.add(tile, tileCol, tileRow);
@@ -373,15 +483,16 @@ public class MajorGameController {
     }
 
     private void renderBattleActions(CombatSnapshot snapshot) {
-        boolean showActionBox = snapshot.playerTurn() && snapshot.selectedAbilityId() == null && !snapshot.turnLocked();
-        battleActionBox.setVisible(showActionBox);
-        battleActionBox.setManaged(showActionBox);
+        battleActionBox.setVisible(true);
+        battleActionBox.setManaged(true);
         battleActionsPane.getChildren().clear();
-        if (!showActionBox) return;
+        
+        boolean actionsEnabled = snapshot.playerTurn() && snapshot.selectedAbilityId() == null && !snapshot.turnLocked();
         
         for (String abilityId : snapshot.playerAbilityIds()) {
             Button abilityButton = new Button(formatItemName(abilityId));
             abilityButton.getStyleClass().add("battle-action-button");
+            abilityButton.setDisable(!actionsEnabled);
             abilityButton.setOnAction(event -> appendResult(engine.combatSelectAbility(abilityId)));
             battleActionsPane.getChildren().add(abilityButton);
         }
