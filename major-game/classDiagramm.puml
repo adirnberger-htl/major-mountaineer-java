@@ -1,0 +1,53 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+left to right direction
+
+package "org.example.majorgame" {
+  class Launcher
+  class MajorGameApplication
+  class MajorGameController
+}
+
+package "org.example.majorgame.game" {
+  class GameEngine
+  class GameWorld
+  class GameTextCatalog
+  class GameSnapshot <<record>>
+  class GameResult <<record>>
+  class Room <<record>>
+  enum Direction
+}
+
+package "org.example.majorgame.game.combat" {
+  class CombatEngine
+  class CombatDataCatalog
+  class CombatSnapshot <<record>>
+  class CombatUnitSnapshot <<record>>
+  class CombatActionResult <<record>>
+  class CombatTile <<record>>
+}
+
+Launcher --> MajorGameApplication : launch
+MajorGameApplication --> MajorGameController : load FXML
+MajorGameController --> GameEngine : commands
+MajorGameController ..> GameResult
+
+GameEngine --> GameWorld : world state
+GameEngine o--> CombatEngine : active combat
+GameEngine ..> GameTextCatalog : text data
+GameEngine ..> CombatDataCatalog : combat data
+GameEngine ..> GameResult
+GameResult --> GameSnapshot
+GameSnapshot --> CombatSnapshot
+
+GameWorld ..> Room
+GameWorld ..> Direction
+GameTextCatalog ..> Direction
+
+CombatEngine ..> CombatActionResult
+CombatEngine ..> CombatSnapshot
+CombatSnapshot ..> CombatUnitSnapshot
+CombatSnapshot ..> CombatTile
+@enduml
