@@ -1,6 +1,7 @@
 package org.example.majorgame.game;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 final class GameWorld {
@@ -8,12 +9,12 @@ final class GameWorld {
 
     private final Map<String, Room> rooms;
     private final Map<String, Map<Direction, String>> paths;
-    private final Map<String, String> initialItemLocations;
+    private final List<GameTextCatalog.ItemPlacement> initialItemLocations;
 
     private GameWorld(
             Map<String, Room> rooms,
             Map<String, Map<Direction, String>> paths,
-            Map<String, String> initialItemLocations
+            List<GameTextCatalog.ItemPlacement> initialItemLocations
     ) {
         this.rooms = rooms;
         this.paths = paths;
@@ -38,7 +39,7 @@ final class GameWorld {
         Map<String, Map<Direction, String>> paths = TEXTS.paths();
         validatePaths(rooms, paths);
 
-        Map<String, String> initialItems = TEXTS.initialItems();
+        List<GameTextCatalog.ItemPlacement> initialItems = TEXTS.initialItems();
         validateInitialItems(rooms, initialItems);
 
         return new GameWorld(rooms, paths, initialItems);
@@ -59,10 +60,10 @@ final class GameWorld {
         }
     }
 
-    private static void validateInitialItems(Map<String, Room> rooms, Map<String, String> initialItems) {
-        for (Map.Entry<String, String> entry : initialItems.entrySet()) {
-            String itemId = entry.getKey();
-            String location = entry.getValue();
+    private static void validateInitialItems(Map<String, Room> rooms, List<GameTextCatalog.ItemPlacement> initialItems) {
+        for (GameTextCatalog.ItemPlacement placement : initialItems) {
+            String itemId = placement.itemId();
+            String location = placement.locationId();
             if (!rooms.containsKey(location)) {
                 throw new IllegalStateException("Item '" + itemId + "' references unknown room: " + location);
             }
@@ -94,8 +95,8 @@ final class GameWorld {
         return exits;
     }
 
-    Map<String, String> initialItemLocations() {
-        return new LinkedHashMap<>(initialItemLocations);
+    List<GameTextCatalog.ItemPlacement> initialItemLocations() {
+        return List.copyOf(initialItemLocations);
     }
 
     void appendDialog(String roomId, String message) {

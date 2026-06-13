@@ -176,7 +176,7 @@ public class ExplorationViewController {
 
     // ── Inventory & Ground Items ────────────────────────────────────────────
 
-    private void renderInventory(Set<String> inventory) {
+    private void renderInventory(List<String> inventory) {
         inventoryIconsPane.getChildren().clear();
         if (inventory.isEmpty()) {
             Label emptyLabel = new Label("No gear collected yet.");

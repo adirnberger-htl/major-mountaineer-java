@@ -4,6 +4,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,14 +16,14 @@ public final class GameTextCatalog {
     private final Map<String, LocationText> locations;
     private final Map<String, Map<Direction, String>> paths;
     private final Map<String, ItemDefinition> items;
-    private final Map<String, String> initialItems;
+    private final List<ItemPlacement> initialItems;
     private final List<String> instructions;
 
     private GameTextCatalog(
             Map<String, LocationText> locations,
             Map<String, Map<Direction, String>> paths,
             Map<String, ItemDefinition> items,
-            Map<String, String> initialItems,
+            List<ItemPlacement> initialItems,
             List<String> instructions
     ) {
         this.locations = locations;
@@ -64,8 +65,8 @@ public final class GameTextCatalog {
         return new LinkedHashMap<>(items);
     }
 
-    public Map<String, String> initialItems() {
-        return new LinkedHashMap<>(initialItems);
+    public List<ItemPlacement> initialItems() {
+        return List.copyOf(initialItems);
     }
 
     private static GameTextCatalog loadFromResource() {
@@ -97,7 +98,7 @@ public final class GameTextCatalog {
 
         Map<String, Object> locationsNode = asMap(root.get("locations"), "locations");
         Map<String, LocationText> locations = new LinkedHashMap<>();
-        Map<String, String> initialItems = new LinkedHashMap<>();
+        List<ItemPlacement> initialItems = new ArrayList<>();
         for (Map.Entry<String, Object> entry : locationsNode.entrySet()) {
             String locationId = entry.getKey();
             Map<String, Object> locationNode = asMap(entry.getValue(), "locations." + locationId);
@@ -115,7 +116,7 @@ public final class GameTextCatalog {
                 if (!items.containsKey(itemId)) {
                     throw new IllegalStateException("Location '" + locationId + "' references undefined item: " + itemId);
                 }
-                initialItems.put(itemId, locationId);
+                initialItems.add(new ItemPlacement(itemId, locationId));
             }
 
             locations.put(locationId, new LocationText(title, description, dialog, autoRouteMessage, autoRouteDirection));
@@ -240,5 +241,11 @@ public final class GameTextCatalog {
         public int getRange() {
             return range != null ? range : 1;
         }
+    }
+
+    public record ItemPlacement(
+            String itemId,
+            String locationId
+    ) {
     }
 }

@@ -1,7 +1,12 @@
 items:
+
+  # Consumables
+
   - id: "apple_juice"
     name: "Apple Juice"
     category: "consumable"
+
+    # Weapons
 
   - id: "walking_cane"
     name: "Walking Cane"
@@ -14,6 +19,12 @@ items:
     category: "weapon"
     damage: 5
     range: 1
+
+  # Other
+
+  - id: "wedding_ring"
+    name: "Diamond Wedding Ring"
+    category: "other"
 
 locations:
 
@@ -33,12 +44,16 @@ locations:
       - "You are in your storage building where your supplies are kept."
     items:
       - "apple_juice"
+      - "apple_juice"
+      - "apple_juice"
   arm_chair:
     title: "The Living Room"
     description:
       - "You look at the empty arm chair where your wife used to sit."
       - "Its lonely ever since she died, you didnt dare touch the chair after the day of her funeral."
-      - "You hope that maybe some day youll find someone who'll be as perfect as she was."
+      - "You hope that maybe some day you'll find someone who'll be as perfect as she was."
+    items:
+      - "wedding_ring"
 
   # The Illusion of choice
 

@@ -29,8 +29,8 @@ public final class GameEngine {
 
     private String location;
     private String checkpointLocation;
-    private Map<String, String> itemLocations;
-    private final Set<String> inventory = new LinkedHashSet<>();
+    private List<GameTextCatalog.ItemPlacement> itemLocations;
+    private final List<String> inventory = new ArrayList<>();
     private int appleJuice;
     private int zeroJuiceTurns;
     private int honor;
@@ -159,17 +159,21 @@ public final class GameEngine {
     public GameResult take(String itemName) {
         String item = normalizeItem(itemName);
         return runTurn(messages -> {
-            if (inventory.contains(item)) {
-                messages.add("You're already holding it!");
-                return;
-            }
             if (inventory.size() >= 4) {
                 messages.add("Your inventory is full (max 4 items).");
                 return;
             }
 
-            if (location.equals(itemLocations.get(item))) {
-                itemLocations.remove(item);
+            GameTextCatalog.ItemPlacement found = null;
+            for (GameTextCatalog.ItemPlacement placement : itemLocations) {
+                if (placement.locationId().equals(location) && placement.itemId().equals(item)) {
+                    found = placement;
+                    break;
+                }
+            }
+
+            if (found != null) {
+                itemLocations.remove(found);
                 inventory.add(item);
                 return;
             }
@@ -191,7 +195,7 @@ public final class GameEngine {
             }
 
             inventory.remove(item);
-            itemLocations.put(item, location);
+            itemLocations.add(new GameTextCatalog.ItemPlacement(item, location));
         }, true);
     }
 
@@ -253,7 +257,7 @@ public final class GameEngine {
                 appleJuice,
                 honor,
                 zeroJuiceTurns,
-                Set.copyOf(inventory),
+                List.copyOf(inventory),
                 List.copyOf(visibleItems()),
                 gameOver,
                 inCombat(),
@@ -314,9 +318,9 @@ public final class GameEngine {
     }
 
     private List<String> visibleItems() {
-        return itemLocations.entrySet().stream()
-                .filter(entry -> location.equals(entry.getValue()))
-                .map(Map.Entry::getKey)
+        return itemLocations.stream()
+                .filter(placement -> location.equals(placement.locationId()))
+                .map(GameTextCatalog.ItemPlacement::itemId)
                 .sorted(Comparator.naturalOrder())
                 .toList();
     }
@@ -439,7 +443,7 @@ public final class GameEngine {
     private void reset() {
         location = DEFAULT_CHECKPOINT;
         checkpointLocation = DEFAULT_CHECKPOINT;
-        itemLocations = world.initialItemLocations();
+        itemLocations = new ArrayList<>(world.initialItemLocations());
         inventory.clear();
         appleJuice = MAX_JUICE;
         zeroJuiceTurns = 0;

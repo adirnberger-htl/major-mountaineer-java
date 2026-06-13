@@ -20,8 +20,3 @@ encounters:
           - "walking_cane"
         row: 1
         col: 3
-        abilities:
-          - id: "heal"
-            name: "Heal"
-            damage: -6
-            range: 2

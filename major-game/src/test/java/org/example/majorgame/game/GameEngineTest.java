@@ -163,4 +163,31 @@ class GameEngineTest {
         assertNull(endTurnResult.snapshot().combatSnapshot().selectedAbilityId());
         assertTrue(endTurnResult.messages().stream().anyMatch(line -> line.contains("Ability selection canceled.")));
     }
+
+    @Test
+    void supportsDuplicateItemsInRoomAndInventory() {
+        GameEngine engine = new GameEngine();
+        // Go to storage_building
+        engine.executeCommand("e");
+        GameSnapshot snapshotBefore = engine.snapshot();
+        // There should be 3 apple juices on the ground
+        assertEquals(List.of("apple_juice", "apple_juice", "apple_juice"), snapshotBefore.visibleItems());
+        assertTrue(snapshotBefore.inventory().isEmpty());
+
+        // Take two apple juices
+        engine.executeCommand("take apple_juice");
+        engine.executeCommand("take apple_juice");
+
+        GameSnapshot snapshotAfterTaking = engine.snapshot();
+        // Inventory should have 2 apple juices, and 1 should remain on the ground
+        assertEquals(List.of("apple_juice", "apple_juice"), snapshotAfterTaking.inventory());
+        assertEquals(List.of("apple_juice"), snapshotAfterTaking.visibleItems());
+
+        // Drop one apple juice
+        engine.executeCommand("drop apple_juice");
+        GameSnapshot snapshotAfterDropping = engine.snapshot();
+        // Inventory should have 1 apple juice, and 2 should be on the ground
+        assertEquals(List.of("apple_juice"), snapshotAfterDropping.inventory());
+        assertEquals(List.of("apple_juice", "apple_juice"), snapshotAfterDropping.visibleItems());
+    }
 }

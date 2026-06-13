@@ -3,6 +3,7 @@ package org.example.majorgame.game.combat;
 import org.example.majorgame.game.GameTextCatalog;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -47,7 +48,7 @@ public final class CombatEngine {
     public static CombatEngine start(
             CombatDataCatalog catalog,
             CombatDataCatalog.EncounterDefinition encounter,
-            Set<String> playerInventory
+            Collection<String> playerInventory
     ) {
         Map<String, CombatAction> playerActions = new LinkedHashMap<>();
 
