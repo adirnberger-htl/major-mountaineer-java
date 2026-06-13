@@ -4,7 +4,8 @@ module org.example.majorgame {
     requires javafx.media;
     requires org.yaml.snakeyaml;
 
-    opens org.example.majorgame.game to javafx.fxml, org.mockito;
+
+    opens org.example.majorgame to javafx.fxml;
 
     exports org.example.majorgame;
     exports org.example.majorgame.game;

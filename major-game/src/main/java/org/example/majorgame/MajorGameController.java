@@ -1,5 +1,6 @@
 package org.example.majorgame;
 
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -16,6 +17,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
@@ -35,12 +39,16 @@ public class MajorGameController {
     private static final String ICON_PATH_PREFIX = "/org/example/majorgame/icons/";
     private static final int BATTLE_TILE_SIZE = 64;
     private static final String HOHE_DIRN_BACKDROP_CLASS = "hohe-dirn-bg";
+    private static final String MEETING_THE_LOCAL_LOCATION_ID = "hd_homeless";
 
     private final GameEngine engine = new GameEngine();
+    private final SoundManager soundManager = new SoundManager();
     private final List<String> commandHistory = new ArrayList<>();
     private final Map<String, Image> iconCache = new HashMap<>();
     private int historyIndex = 0;
+    private String previousLocationId;
     private CombatSnapshot currentCombatSnapshot;
+    private boolean wasInCombat = false;
 
     @FXML
     private BorderPane rootPane;
@@ -92,6 +100,18 @@ public class MajorGameController {
 
     @FXML
     private void initialize() {
+        // zu fixen: mp3s funktionieren ned sowohl auch lange .wav files
+        // mögliche gründe: bitrate, channel configuration, sample rate oder unknown javafx media quirk
+        // entweder das oder es ist ein native system problem mit arch/linux generell
+        // soundManager.playMusic("tracks/soundtrack1.mp3");
+        // soundManager.playMusic("effects/wind.mp3");
+
+        // temporary solution, *kurze* .wav files auf repeat mit playmusic methode spielen
+
+        //soundManager.playMusic("effects/criticalhit.wav");
+
+        soundManager.playMusic("effects/wind.wav");
+
         appendResult(engine.openingScene());
         historyIndex = commandHistory.size();
     }
@@ -156,6 +176,7 @@ public class MajorGameController {
     }
 
     private void renderState(GameSnapshot snapshot) {
+        playLocationSounds(snapshot.locationId());
         locationPromptLabel.setText(snapshot.locationPrompt());
         juiceLabel.setText("Apple juice: " + snapshot.appleJuice() + "/" + STATUS_MAX);
         honorLabel.setText("Honor: " + snapshot.honor() + "/" + STATUS_MAX);
@@ -164,6 +185,38 @@ public class MajorGameController {
         renderInventory(snapshot.inventory());
         updateBackdrop(snapshot.locationId());
         renderMode(snapshot);
+    }
+
+    // jz grad static aber ich machs später so dass es basierend auf locations
+    // dynamisch dialog abspielt
+    private void playLocationSounds(String locationId) {
+        if (locationId == null || locationId.equals(previousLocationId)) {
+            return;
+        }
+
+        previousLocationId = locationId;
+
+        if (MEETING_THE_LOCAL_LOCATION_ID.equals(locationId)) {
+
+            PauseTransition firstLineDelay = new PauseTransition(Duration.seconds(2.0));
+            firstLineDelay.setOnFinished(event ->
+                    soundManager.playEffect("meetingthelocal/meetingthelocal1.wav")
+            );
+            firstLineDelay.play();
+
+            PauseTransition secondLineDelay = new PauseTransition(Duration.seconds(7.5));
+            secondLineDelay.setOnFinished(event ->
+                    soundManager.playEffect("meetingthelocal/meetingthelocal2.wav")
+            );
+            secondLineDelay.play();
+
+            PauseTransition musicDelay = new PauseTransition(Duration.seconds(10.5));
+            musicDelay.setOnFinished(event ->
+                    soundManager.playMusic("meetingthelocal/backgroundmusic.wav")
+            );
+            musicDelay.play();
+
+        }
     }
 
     private void updateBackdrop(String locationId) {
@@ -182,12 +235,27 @@ public class MajorGameController {
 
     private void renderMode(GameSnapshot snapshot) {
         boolean inCombat = snapshot.inCombat() && snapshot.combatSnapshot() != null;
+
+        // irgwas spielen bei kampf verlassen or joinen
+        if (inCombat && !wasInCombat) {
+            soundManager.stopMusic();
+            soundManager.playEffect("effects/enemyspotted.wav");
+            // soundManager.playMusic("combat.mp3");
+
+        } else if (!inCombat && wasInCombat) {
+            soundManager.stopMusic();
+            soundManager.playEffect("effects/honorloss.wav");
+            // soundManager.playMusic("soundtrack1.mp3");
+        }
+        wasInCombat = inCombat;
+
         outputArea.setVisible(!inCombat);
         outputArea.setManaged(!inCombat);
         commandPanel.setVisible(!inCombat);
         commandPanel.setManaged(!inCombat);
         battlePane.setVisible(inCombat);
         battlePane.setManaged(inCombat);
+
 
         if (!inCombat) {
             currentCombatSnapshot = null;
@@ -272,9 +340,17 @@ public class MajorGameController {
         if (currentCombatSnapshot == null) {
             return;
         }
+
+        boolean isTargetingAbility = currentCombatSnapshot.selectedAbilityId() != null;
+
         GameResult result = currentCombatSnapshot.selectedAbilityId() == null
                 ? engine.combatMovePlayer(row, col)
                 : engine.combatTargetAt(row, col);
+
+        if (isTargetingAbility) {
+            soundManager.playEffect("effects/punch.wav");
+        }
+
         appendResult(result);
     }
 
