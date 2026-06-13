@@ -21,4 +21,7 @@ public record GameSnapshot(
         boolean inCombat,
         CombatSnapshot combatSnapshot
 ) {
+    public String locationPrompt() {
+       return locationTitle + " " + locationDescription;
+    }
 }

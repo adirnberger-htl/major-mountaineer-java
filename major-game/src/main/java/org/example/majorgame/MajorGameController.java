@@ -24,7 +24,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import jdk.jfr.internal.Type;
 import org.example.majorgame.game.Direction;
 import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
@@ -89,7 +88,8 @@ public class MajorGameController {
     @FXML private FlowPane battleActionsPane;
     @FXML private Label battleStatusLabel;
     @FXML private Button battleEndTurnButton;
-    @FXML private HTMLBodyElement locationPromptLabel;
+    @FXML private Label locationPromptLabel;
+    @FXML private ListView outputArea;
 
     @FXML
     private void initialize() {

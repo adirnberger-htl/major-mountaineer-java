@@ -3,6 +3,7 @@ module org.example.majorgame {
     requires javafx.fxml;
     requires javafx.media;
     requires org.yaml.snakeyaml;
+    requires jdk.xml.dom;
 
 
     opens org.example.majorgame to javafx.fxml;
