@@ -396,7 +396,7 @@ public final class GameEngine {
             return;
         }
 
-        activeCombat = CombatEngine.start(COMBAT_DATA, encounter);
+        activeCombat = CombatEngine.start(COMBAT_DATA, encounter, inventory);
         messages.addAll(activeCombat.openingMessages());
         messages.add("Combat started. Use the battle grid to move and attack.");
     }

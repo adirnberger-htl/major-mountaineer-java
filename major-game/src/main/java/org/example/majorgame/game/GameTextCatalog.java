@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-final class GameTextCatalog {
+public final class GameTextCatalog {
     private static final String RESOURCE_PATH = "/org/example/majorgame/game-text.yml";
     private static final GameTextCatalog DEFAULT = loadFromResource();
 
@@ -32,7 +32,7 @@ final class GameTextCatalog {
         this.instructions = instructions;
     }
 
-    static GameTextCatalog defaultCatalog() {
+    public static GameTextCatalog defaultCatalog() {
         return DEFAULT;
     }
 
@@ -60,11 +60,11 @@ final class GameTextCatalog {
         return copiedPaths;
     }
 
-    Map<String, ItemDefinition> items() {
+    public Map<String, ItemDefinition> items() {
         return new LinkedHashMap<>(items);
     }
 
-    Map<String, String> initialItems() {
+    public Map<String, String> initialItems() {
         return new LinkedHashMap<>(initialItems);
     }
 
@@ -89,7 +89,10 @@ final class GameTextCatalog {
             Map<String, Object> itemNode = asMap(itemsNode.get(i), "items[" + i + "]");
             String id = asString(itemNode.get("id"), "items[" + i + "].id");
             String name = optionalString(itemNode.get("name"), "items[" + i + "].name");
-            items.put(id, new ItemDefinition(id, name));
+            String category = optionalString(itemNode.get("category"), "items[" + i + "].category");
+            Integer damage = optionalInt(itemNode.get("damage"), "items[" + i + "].damage");
+            Integer range = optionalInt(itemNode.get("range"), "items[" + i + "].range");
+            items.put(id, new ItemDefinition(id, name, category, damage, range));
         }
 
         Map<String, Object> locationsNode = asMap(root.get("locations"), "locations");
@@ -188,6 +191,16 @@ final class GameTextCatalog {
         throw new IllegalStateException("Expected string at '" + fieldPath + "'.");
     }
 
+    private static Integer optionalInt(Object value, String fieldPath) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        throw new IllegalStateException("Expected integer at '" + fieldPath + "'.");
+    }
+
     private static List<String> asStringList(Object value, String fieldPath) {
         if (value instanceof List<?> list && list.stream().allMatch(String.class::isInstance)) {
             return List.copyOf(list.stream().map(String.class::cast).toList());
@@ -211,9 +224,21 @@ final class GameTextCatalog {
     ) {
     }
 
-    record ItemDefinition(
+    public record ItemDefinition(
             String id,
-            String name
+            String name,
+            String category,
+            Integer damage,
+            Integer range
     ) {
+        public boolean isWeapon() {
+            return "weapon".equals(category);
+        }
+        public int getDamage() {
+            return damage != null ? damage : 0;
+        }
+        public int getRange() {
+            return range != null ? range : 1;
+        }
     }
 }

@@ -1,11 +1,23 @@
 items:
   - id: "apple_juice"
     name: "Apple Juice"
+    category: "consumable"
+
+  - id: "walking_cane"
+    name: "Walking Cane"
+    category: "weapon"
+    damage: 4
+    range: 1
+
+  - id: "fists"
+    name: "Fists"
+    category: "weapon"
+    damage: 5
+    range: 1
 
 locations:
 
   # Starter Area
-
 
   mud_huzz:
     title: "Mud Hut"

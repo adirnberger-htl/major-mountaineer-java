@@ -145,7 +145,7 @@ class GameEngineTest {
 
         assertTrue(result.snapshot().inCombat());
         assertTrue(result.messages().stream().anyMatch(line -> line.contains("Old Man")));
-        assertTrue(result.snapshot().combatSnapshot().playerAbilityIds().contains("punch"));
+        assertTrue(result.snapshot().combatSnapshot().playerAbilityIds().contains("fists"));
     }
 
     @Test
@@ -156,7 +156,7 @@ class GameEngineTest {
         engine.executeCommand("n");
         engine.executeCommand("n");
 
-        engine.combatSelectAbility("punch");
+        engine.combatSelectAbility("fists");
         GameResult endTurnResult = engine.combatEndTurn();
 
         assertTrue(endTurnResult.snapshot().inCombat());
