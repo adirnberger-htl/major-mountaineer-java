@@ -1,6 +1,11 @@
+items:
+  - id: "apple_juice"
+    name: "Apple Juice"
+
 locations:
 
   # Starter Area
+
 
   mud_huzz:
     title: "Mud Hut"
@@ -9,11 +14,13 @@ locations:
   train_station:
     title: "Train Station"
     description:
-      - "You are at the trusty ol train station. Here only one train leaves and arrives evrery day."
+      - "You are at the trusty ol train station. Here only one train leaves and arrives every day."
   storage_building:
     title: "Storage Building"
     description:
       - "You are in your storage building where your supplies are kept."
+    items:
+      - "apple_juice"
   arm_chair:
     title: "The Living Room"
     description:
@@ -81,9 +88,6 @@ paths:
   hd_slums:
     n: "hd_homeless|we can go to the nice looking old man and ask him for directions."
     e: "hd_homeless|there seems to be a small trail, we could just try our luck."
-
-items:
-  apple_juice: "storage_building"
 
 commands:
   instructions:

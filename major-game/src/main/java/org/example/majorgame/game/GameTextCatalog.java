@@ -14,17 +14,20 @@ final class GameTextCatalog {
 
     private final Map<String, LocationText> locations;
     private final Map<String, Map<Direction, String>> paths;
+    private final Map<String, ItemDefinition> items;
     private final Map<String, String> initialItems;
     private final List<String> instructions;
 
     private GameTextCatalog(
             Map<String, LocationText> locations,
             Map<String, Map<Direction, String>> paths,
+            Map<String, ItemDefinition> items,
             Map<String, String> initialItems,
             List<String> instructions
     ) {
         this.locations = locations;
         this.paths = paths;
+        this.items = items;
         this.initialItems = initialItems;
         this.instructions = instructions;
     }
@@ -57,6 +60,10 @@ final class GameTextCatalog {
         return copiedPaths;
     }
 
+    Map<String, ItemDefinition> items() {
+        return new LinkedHashMap<>(items);
+    }
+
     Map<String, String> initialItems() {
         return new LinkedHashMap<>(initialItems);
     }
@@ -75,8 +82,19 @@ final class GameTextCatalog {
         }
         Map<String, Object> root = asMap(loaded, "root");
 
+        // Parse global items first for validation
+        List<Object> itemsNode = asList(root.get("items"), "items");
+        Map<String, ItemDefinition> items = new LinkedHashMap<>();
+        for (int i = 0; i < itemsNode.size(); i++) {
+            Map<String, Object> itemNode = asMap(itemsNode.get(i), "items[" + i + "]");
+            String id = asString(itemNode.get("id"), "items[" + i + "].id");
+            String name = optionalString(itemNode.get("name"), "items[" + i + "].name");
+            items.put(id, new ItemDefinition(id, name));
+        }
+
         Map<String, Object> locationsNode = asMap(root.get("locations"), "locations");
         Map<String, LocationText> locations = new LinkedHashMap<>();
+        Map<String, String> initialItems = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : locationsNode.entrySet()) {
             String locationId = entry.getKey();
             Map<String, Object> locationNode = asMap(entry.getValue(), "locations." + locationId);
@@ -88,6 +106,15 @@ final class GameTextCatalog {
                     locationNode.get("autoRouteDirection"),
                     "locations." + locationId + ".autoRouteDirection"
             );
+
+            List<String> locationItems = optionalStringList(locationNode.get("items"), "locations." + locationId + ".items");
+            for (String itemId : locationItems) {
+                if (!items.containsKey(itemId)) {
+                    throw new IllegalStateException("Location '" + locationId + "' references undefined item: " + itemId);
+                }
+                initialItems.put(itemId, locationId);
+            }
+
             locations.put(locationId, new LocationText(title, description, dialog, autoRouteMessage, autoRouteDirection));
         }
 
@@ -105,17 +132,9 @@ final class GameTextCatalog {
             paths.put(fromLocation, directionMappings);
         }
 
-        Map<String, Object> itemsNode = asMap(root.get("items"), "items");
-        Map<String, String> initialItems = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> itemEntry : itemsNode.entrySet()) {
-            String itemId = itemEntry.getKey();
-            String locationId = asString(itemEntry.getValue(), "items." + itemId);
-            initialItems.put(itemId, locationId);
-        }
-
         Map<String, Object> commandsNode = asMap(root.get("commands"), "commands");
         List<String> instructions = asStringList(commandsNode.get("instructions"), "commands.instructions");
-        return new GameTextCatalog(locations, paths, initialItems, List.copyOf(instructions));
+        return new GameTextCatalog(locations, paths, items, initialItems, List.copyOf(instructions));
     }
 
     private static Direction parseDirection(String token, String fieldPath) {
@@ -142,6 +161,14 @@ final class GameTextCatalog {
             return (Map<String, Object>) map;
         }
         throw new IllegalStateException("Expected map at '" + fieldPath + "'.");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Object> asList(Object value, String fieldPath) {
+        if (value instanceof List<?> list) {
+            return (List<Object>) list;
+        }
+        throw new IllegalStateException("Expected list at '" + fieldPath + "'.");
     }
 
     private static String asString(Object value, String fieldPath) {
@@ -181,6 +208,12 @@ final class GameTextCatalog {
             List<String> dialogLines,
             String autoRouteMessage,
             Direction autoRouteDirection
+    ) {
+    }
+
+    record ItemDefinition(
+            String id,
+            String name
     ) {
     }
 }
