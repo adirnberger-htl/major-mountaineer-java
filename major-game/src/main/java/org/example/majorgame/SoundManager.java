@@ -20,8 +20,7 @@ public class SoundManager {
     private double effectsVolume = 0.65;
 
     public void playMusic(String fileName) {
-
-        javafx.application.Platform.runLater(() -> {
+        Runnable playTask = () -> {
             stopMusic();
 
             String resourcePath = SOUND_PATH + fileName;
@@ -49,7 +48,17 @@ public class SoundManager {
                 System.err.println("Error initializing player for: " + fileName);
                 e.printStackTrace();
             }
-        });
+        };
+
+        if (javafx.application.Platform.isFxApplicationThread()) {
+            playTask.run();
+        } else {
+            try {
+                javafx.application.Platform.runLater(playTask);
+            } catch (IllegalStateException e) {
+                playTask.run();
+            }
+        }
     }
 
 

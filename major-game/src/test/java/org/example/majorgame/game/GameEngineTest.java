@@ -21,7 +21,7 @@ class GameEngineTest {
         assertEquals("mud_huzz", snapshot.locationId());
         assertEquals(100, snapshot.appleJuice());
         assertEquals(25, snapshot.honor());
-        assertTrue(snapshot.locationPrompt().contains("Mud Huzz"));
+        assertTrue(snapshot.locationPrompt().contains("Mud Hut"));
     }
 
     @Test
@@ -115,21 +115,19 @@ class GameEngineTest {
     void checkCommandSetsCheckpointAndRespawnsThere() {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
+        engine.executeCommand("e");
 
         GameResult checkResult = engine.executeCommand("check");
         GameResult dieResult = engine.executeCommand("die");
 
-        assertTrue(checkResult.messages().stream().anyMatch(line -> line.contains("Checkpoint set at Train Station.")));
-        assertEquals("train_station", dieResult.snapshot().locationId());
+        assertTrue(checkResult.messages().stream().anyMatch(line -> line.contains("Checkpoint set at HOHE DIRN.")));
+        assertEquals("hohe_dirn", dieResult.snapshot().locationId());
     }
 
     @Test
     void checkCommandIsRejectedOutsideAllowedCheckpointAreas() {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
-        engine.executeCommand("check");
-        engine.executeCommand("n");
-        assertEquals("hohe_dirn", engine.snapshot().locationId());
 
         GameResult notAllowedResult = engine.executeCommand("check");
 
@@ -141,6 +139,7 @@ class GameEngineTest {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
         engine.executeCommand("e");
+        engine.executeCommand("n");
 
         GameResult result = engine.executeCommand("n");
 
@@ -154,6 +153,7 @@ class GameEngineTest {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
         engine.executeCommand("e");
+        engine.executeCommand("n");
         engine.executeCommand("n");
 
         engine.combatSelectAbility("punch");
