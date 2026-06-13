@@ -1,35 +1,4 @@
-abilities:
-
-  # Major
-
-  punch:
-    name: "Punch"
-    damage: 5
-    range: 1
-
-  # Old Man
-
-  cane_strike:
-    name: "Cane Strike"
-    damage: 4
-    range: 1
-
-weapons:
-  fists:
-    name: "Fists"
-    damageBonus: 0
-  walking_cane:
-    name: "Walking Cane"
-    damageBonus: 1
-
-enemyTypes:
-  old_man:
-    name: "Old Man"
-    maxHp: 18
-    movesPerTurn: 1
-    abilities:
-      - "cane_strike"
-    weapon: "walking_cane"
+playerAbilities: []
 
 encounters:
 
@@ -44,6 +13,10 @@ encounters:
       col: 1
     enemies:
       - id: "old_man_1"
-        type: "old_man"
+        name: "Old Man"
+        maxHp: 18
+        movesPerTurn: 1
+        weapons:
+          - "walking_cane"
         row: 1
         col: 3

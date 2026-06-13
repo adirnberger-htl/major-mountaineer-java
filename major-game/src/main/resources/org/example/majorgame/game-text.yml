@@ -1,3 +1,31 @@
+items:
+
+  # Consumables
+
+  - id: "apple_juice"
+    name: "Apple Juice"
+    category: "consumable"
+
+    # Weapons
+
+  - id: "walking_cane"
+    name: "Walking Cane"
+    category: "weapon"
+    damage: 4
+    range: 1
+
+  - id: "fists"
+    name: "Fists"
+    category: "weapon"
+    damage: 5
+    range: 1
+
+  # Other
+
+  - id: "wedding_ring"
+    name: "Diamond Wedding Ring"
+    category: "other"
+
 locations:
 
   # Starter Area
@@ -9,17 +37,23 @@ locations:
   train_station:
     title: "Train Station"
     description:
-      - "You are at the trusty ol train station. Here only one train leaves and arrives evrery day."
+      - "You are at the trusty ol train station. Here only one train leaves and arrives every day."
   storage_building:
     title: "Storage Building"
     description:
       - "You are in your storage building where your supplies are kept."
+    items:
+      - "apple_juice"
+      - "apple_juice"
+      - "apple_juice"
   arm_chair:
     title: "The Living Room"
     description:
       - "You look at the empty arm chair where your wife used to sit."
       - "Its lonely ever since she died, you didnt dare touch the chair after the day of her funeral."
-      - "You hope that maybe some day youll find someone who'll be as perfect as she was."
+      - "You hope that maybe some day you'll find someone who'll be as perfect as she was."
+    items:
+      - "wedding_ring"
 
   # The Illusion of choice
 
@@ -81,9 +115,6 @@ paths:
   hd_slums:
     n: "hd_homeless|we can go to the nice looking old man and ask him for directions."
     e: "hd_homeless|there seems to be a small trail, we could just try our luck."
-
-items:
-  apple_juice: "storage_building"
 
 commands:
   instructions:

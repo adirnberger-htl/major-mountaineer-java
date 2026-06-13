@@ -1,9 +1,14 @@
 package org.example.majorgame.game.combat;
 
+import org.example.majorgame.game.GameTextCatalog;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public final class CombatEngine {
@@ -17,11 +22,10 @@ public final class CombatEngine {
     private final CombatDataCatalog.EncounterDefinition encounter;
     private final CombatUnit player;
     private final List<CombatUnit> enemies;
-    private final Set<String> playerAbilities;
 
     private int playerMoveModifier;
     private int playerMovesRemaining;
-    private String selectedAbilityId;
+    private String selectedAbilityId; // acts as selectedActionId
     private boolean turnLocked;
     private String statusText = "Choose your move.";
     private boolean finished;
@@ -37,13 +41,37 @@ public final class CombatEngine {
         this.encounter = encounter;
         this.player = player;
         this.enemies = enemies;
-        this.playerAbilities = new LinkedHashSet<>();
-        this.playerAbilities.add("punch");
         this.playerMoveModifier = 0;
         this.playerMovesRemaining = effectivePlayerMoves();
     }
 
-    public static CombatEngine start(CombatDataCatalog catalog, CombatDataCatalog.EncounterDefinition encounter) {
+    public static CombatEngine start(
+            CombatDataCatalog catalog,
+            CombatDataCatalog.EncounterDefinition encounter,
+            Collection<String> playerInventory
+    ) {
+        Map<String, CombatAction> playerActions = new LinkedHashMap<>();
+
+        // Add default fists weapon
+        GameTextCatalog.ItemDefinition fistsDef = GameTextCatalog.defaultCatalog().items().get(PLAYER_WEAPON_ID);
+        if (fistsDef != null && fistsDef.isWeapon()) {
+            playerActions.put(PLAYER_WEAPON_ID, new CombatAction(
+                    PLAYER_WEAPON_ID, fistsDef.name(), fistsDef.getDamage(), fistsDef.getRange(), true
+            ));
+        } else {
+            playerActions.put(PLAYER_WEAPON_ID, new CombatAction(PLAYER_WEAPON_ID, "Fists", 5, 1, true));
+        }
+
+        // Add weapons from player's inventory
+        for (String itemId : playerInventory) {
+            GameTextCatalog.ItemDefinition item = GameTextCatalog.defaultCatalog().items().get(itemId);
+            if (item != null && item.isWeapon()) {
+                playerActions.put(itemId, new CombatAction(
+                        itemId, item.name(), item.getDamage(), item.getRange(), true
+                ));
+            }
+        }
+
         CombatUnit player = new CombatUnit(
                 PLAYER_UNIT_ID,
                 PLAYER_NAME,
@@ -51,26 +79,43 @@ public final class CombatEngine {
                 PLAYER_MAX_HP,
                 PLAYER_BASE_MOVES,
                 new CombatDataCatalog.GridPosition(encounter.playerStart().row(), encounter.playerStart().col()),
-                List.of("punch"),
-                PLAYER_WEAPON_ID,
+                playerActions,
                 true
         );
 
         List<CombatUnit> enemies = new ArrayList<>();
-        for (CombatDataCatalog.EnemySpawn enemySpawn : encounter.enemies()) {
-            CombatDataCatalog.EnemyTypeDefinition enemyType = catalog.enemyType(enemySpawn.type());
+        for (CombatDataCatalog.EnemyDefinition enemy : encounter.enemies()) {
+            Map<String, CombatAction> enemyActions = new LinkedHashMap<>();
+
+            // Add enemy's weapons
+            for (String weaponId : enemy.weaponIds()) {
+                GameTextCatalog.ItemDefinition weaponDef = GameTextCatalog.defaultCatalog().items().get(weaponId);
+                if (weaponDef != null && weaponDef.isWeapon()) {
+                    enemyActions.put(weaponId, new CombatAction(
+                            weaponId, weaponDef.name(), weaponDef.getDamage(), weaponDef.getRange(), true
+                    ));
+                }
+            }
+
+            // Add enemy's inline abilities
+            for (CombatDataCatalog.AbilityDefinition ab : enemy.abilities()) {
+                enemyActions.put(ab.id(), new CombatAction(
+                        ab.id(), ab.name(), ab.damage(), ab.range(), false
+                ));
+            }
+
             enemies.add(new CombatUnit(
-                    enemySpawn.id(),
-                    enemyType.name(),
-                    enemyType.maxHp(),
-                    enemyType.maxHp(),
-                    enemyType.movesPerTurn(),
-                    new CombatDataCatalog.GridPosition(enemySpawn.position().row(), enemySpawn.position().col()),
-                    enemyType.abilities(),
-                    enemyType.weapon(),
+                    enemy.id(),
+                    enemy.name(),
+                    enemy.maxHp(),
+                    enemy.maxHp(),
+                    enemy.movesPerTurn(),
+                    new CombatDataCatalog.GridPosition(enemy.position().row(), enemy.position().col()),
+                    enemyActions,
                     false
             ));
         }
+
         return new CombatEngine(catalog, encounter, player, enemies);
     }
 
@@ -89,7 +134,7 @@ public final class CombatEngine {
             return new CombatActionResult(List.of("Turn is locked. Press End Turn."));
         }
         if (selectedAbilityId != null) {
-            return new CombatActionResult(List.of("Target an enemy for " + abilityName(selectedAbilityId) + "."));
+            return new CombatActionResult(List.of("Target a unit for " + abilityName(selectedAbilityId) + "."));
         }
         if (playerMovesRemaining <= 0) {
             return new CombatActionResult(List.of("No movement points left this turn."));
@@ -105,7 +150,7 @@ public final class CombatEngine {
 
         player.position = target;
         playerMovesRemaining -= 1;
-        statusText = playerMovesRemaining > 0 ? "Move or choose attack." : "Choose your attack.";
+        statusText = playerMovesRemaining > 0 ? "Move or choose action." : "Choose your action.";
         return new CombatActionResult(List.of("Major moves to [" + row + "," + col + "]."));
     }
 
@@ -116,8 +161,8 @@ public final class CombatEngine {
         if (turnLocked) {
             return new CombatActionResult(List.of("Turn is locked. Press End Turn."));
         }
-        if (!playerAbilities.contains(abilityId)) {
-            return new CombatActionResult(List.of("Ability not available."));
+        if (!player.actions.containsKey(abilityId)) {
+            return new CombatActionResult(List.of("Action not available."));
         }
         selectedAbilityId = abilityId;
         Set<CombatTile> targetable = targetableTiles();
@@ -135,11 +180,11 @@ public final class CombatEngine {
             return new CombatActionResult(List.of("Turn is locked. Press End Turn."));
         }
         if (selectedAbilityId == null) {
-            return new CombatActionResult(List.of("Choose an ability first."));
+            return new CombatActionResult(List.of("Choose an action first."));
         }
-        CombatUnit target = enemyAt(row, col);
+        CombatUnit target = unitAt(row, col);
         if (target == null) {
-            return new CombatActionResult(List.of("Select an enemy tile."));
+            return new CombatActionResult(List.of("Select a unit tile."));
         }
         if (!targetableTiles().contains(new CombatTile(row, col))) {
             return new CombatActionResult(List.of("Target is out of range."));
@@ -149,7 +194,7 @@ public final class CombatEngine {
         applyDamage(player, target, selectedAbilityId, messages);
         selectedAbilityId = null;
 
-        if (target.hp <= 0) {
+        if (target.hp <= 0 && !target.player) {
             messages.add(target.name + " is defeated.");
         }
         if (livingEnemies().isEmpty()) {
@@ -239,7 +284,7 @@ public final class CombatEngine {
                 turnLocked,
                 !finished,
                 playerMovesRemaining,
-                List.copyOf(playerAbilities),
+                List.copyOf(player.actions.keySet()),
                 selectedAbilityId,
                 reachableTiles(),
                 targetableTiles(),
@@ -253,9 +298,14 @@ public final class CombatEngine {
                 return;
             }
             moveEnemyTowardPlayer(enemy, messages);
-            String abilityId = firstUsableAbility(enemy);
-            if (abilityId != null) {
-                applyDamage(enemy, player, abilityId, messages);
+            String actionId = firstUsableAction(enemy);
+            if (actionId != null) {
+                CombatAction action = enemy.actions.get(actionId);
+                if (action.damage() < 0) {
+                    applyDamage(enemy, enemy, actionId, messages);
+                } else {
+                    applyDamage(enemy, player, actionId, messages);
+                }
             }
         }
     }
@@ -290,22 +340,41 @@ public final class CombatEngine {
         return null;
     }
 
-    private String firstUsableAbility(CombatUnit enemy) {
-        for (String abilityId : enemy.abilities) {
-            CombatDataCatalog.AbilityDefinition ability = catalog.ability(abilityId);
-            if (distance(enemy.position, player.position) <= ability.range()) {
-                return abilityId;
+    private String firstUsableAction(CombatUnit enemy) {
+        for (Map.Entry<String, CombatAction> entry : enemy.actions.entrySet()) {
+            CombatAction action = entry.getValue();
+            if (action.damage() < 0) {
+                if (enemy.hp < enemy.maxHp) {
+                    return entry.getKey();
+                }
+            } else {
+                if (distance(enemy.position, player.position) <= action.range()) {
+                    return entry.getKey();
+                }
             }
         }
         return null;
     }
 
-    private void applyDamage(CombatUnit attacker, CombatUnit defender, String abilityId, List<String> messages) {
-        CombatDataCatalog.AbilityDefinition ability = catalog.ability(abilityId);
-        int weaponBonus = catalog.weapon(attacker.weaponId).damageBonus();
-        int damage = Math.max(1, ability.damage() + weaponBonus);
-        defender.hp = Math.max(0, defender.hp - damage);
-        messages.add(attacker.name + " uses " + ability.name() + " on " + defender.name + " for " + damage + " damage.");
+    private void applyDamage(CombatUnit attacker, CombatUnit defender, String actionId, List<String> messages) {
+        CombatAction action = attacker.actions.get(actionId);
+        if (action == null) {
+            return;
+        }
+        int damage = action.damage();
+        if (action.isWeapon()) {
+            defender.hp = Math.max(0, defender.hp - damage);
+            messages.add(attacker.name + " attacks " + defender.name + " with " + action.name() + " for " + damage + " damage.");
+        } else {
+            if (damage < 0) {
+                int healAmount = -damage;
+                defender.hp = Math.min(defender.maxHp, defender.hp + healAmount);
+                messages.add(attacker.name + " uses " + action.name() + " on " + defender.name + ", healing " + healAmount + " HP.");
+            } else {
+                defender.hp = Math.max(0, defender.hp - damage);
+                messages.add(attacker.name + " uses " + action.name() + " on " + defender.name + " for " + damage + " damage.");
+            }
+        }
     }
 
     private boolean isOccupied(CombatDataCatalog.GridPosition position) {
@@ -331,11 +400,19 @@ public final class CombatEngine {
         if (finished || turnLocked || selectedAbilityId == null) {
             return Set.of();
         }
-        int range = catalog.ability(selectedAbilityId).range();
+        CombatAction action = player.actions.get(selectedAbilityId);
+        if (action == null) {
+            return Set.of();
+        }
+        int range = action.range();
         Set<CombatTile> tiles = new LinkedHashSet<>();
-        for (CombatUnit enemy : livingEnemies()) {
-            if (distance(player.position, enemy.position) <= range) {
-                tiles.add(new CombatTile(enemy.position.row(), enemy.position.col()));
+        if (action.damage() < 0) {
+            tiles.add(new CombatTile(player.position.row(), player.position.col()));
+        } else {
+            for (CombatUnit enemy : livingEnemies()) {
+                if (distance(player.position, enemy.position) <= range) {
+                    tiles.add(new CombatTile(enemy.position.row(), enemy.position.col()));
+                }
             }
         }
         return Set.copyOf(tiles);
@@ -348,7 +425,10 @@ public final class CombatEngine {
         }
     }
 
-    private CombatUnit enemyAt(int row, int col) {
+    private CombatUnit unitAt(int row, int col) {
+        if (player.position.row() == row && player.position.col() == col) {
+            return player;
+        }
         for (CombatUnit enemy : livingEnemies()) {
             if (enemy.position.row() == row && enemy.position.col() == col) {
                 return enemy;
@@ -380,8 +460,18 @@ public final class CombatEngine {
         return a.row() == b.row() && a.col() == b.col();
     }
 
-    private String abilityName(String abilityId) {
-        return catalog.ability(abilityId).name();
+    private String abilityName(String actionId) {
+        CombatAction action = player.actions.get(actionId);
+        return action != null ? action.name() : actionId;
+    }
+
+    public record CombatAction(
+            String id,
+            String name,
+            int damage,
+            int range,
+            boolean isWeapon
+    ) {
     }
 
     private static final class CombatUnit {
@@ -391,8 +481,7 @@ public final class CombatEngine {
         private final int maxHp;
         private final int movesPerTurn;
         private CombatDataCatalog.GridPosition position;
-        private final List<String> abilities;
-        private final String weaponId;
+        private final Map<String, CombatAction> actions;
         private final boolean player;
 
         private CombatUnit(
@@ -402,8 +491,7 @@ public final class CombatEngine {
                 int maxHp,
                 int movesPerTurn,
                 CombatDataCatalog.GridPosition position,
-                List<String> abilities,
-                String weaponId,
+                Map<String, CombatAction> actions,
                 boolean player
         ) {
             this.id = id;
@@ -412,8 +500,7 @@ public final class CombatEngine {
             this.maxHp = maxHp;
             this.movesPerTurn = movesPerTurn;
             this.position = position;
-            this.abilities = abilities;
-            this.weaponId = weaponId;
+            this.actions = actions;
             this.player = player;
         }
     }

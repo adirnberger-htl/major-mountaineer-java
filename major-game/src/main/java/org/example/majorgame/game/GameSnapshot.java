@@ -15,7 +15,7 @@ public record GameSnapshot(
         int appleJuice,
         int honor,
         int zeroJuiceTurns,
-        Set<String> inventory,
+        List<String> inventory,
         List<String> visibleItems,
         boolean gameOver,
         boolean inCombat,

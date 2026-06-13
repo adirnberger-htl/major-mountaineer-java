@@ -21,7 +21,7 @@ class GameEngineTest {
         assertEquals("mud_huzz", snapshot.locationId());
         assertEquals(100, snapshot.appleJuice());
         assertEquals(25, snapshot.honor());
-        assertTrue(snapshot.locationPrompt().contains("Mud Huzz"));
+        assertTrue(snapshot.locationPrompt().contains("Mud Hut"));
     }
 
     @Test
@@ -115,21 +115,19 @@ class GameEngineTest {
     void checkCommandSetsCheckpointAndRespawnsThere() {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
+        engine.executeCommand("e");
 
         GameResult checkResult = engine.executeCommand("check");
         GameResult dieResult = engine.executeCommand("die");
 
-        assertTrue(checkResult.messages().stream().anyMatch(line -> line.contains("Checkpoint set at Train Station.")));
-        assertEquals("train_station", dieResult.snapshot().locationId());
+        assertTrue(checkResult.messages().stream().anyMatch(line -> line.contains("Checkpoint set at HOHE DIRN.")));
+        assertEquals("hohe_dirn", dieResult.snapshot().locationId());
     }
 
     @Test
     void checkCommandIsRejectedOutsideAllowedCheckpointAreas() {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
-        engine.executeCommand("check");
-        engine.executeCommand("n");
-        assertEquals("hohe_dirn", engine.snapshot().locationId());
 
         GameResult notAllowedResult = engine.executeCommand("check");
 
@@ -141,12 +139,13 @@ class GameEngineTest {
         GameEngine engine = new GameEngine();
         engine.executeCommand("n");
         engine.executeCommand("e");
+        engine.executeCommand("n");
 
         GameResult result = engine.executeCommand("n");
 
         assertTrue(result.snapshot().inCombat());
         assertTrue(result.messages().stream().anyMatch(line -> line.contains("Old Man")));
-        assertTrue(result.snapshot().combatSnapshot().playerAbilityIds().contains("punch"));
+        assertTrue(result.snapshot().combatSnapshot().playerAbilityIds().contains("fists"));
     }
 
     @Test
@@ -155,12 +154,40 @@ class GameEngineTest {
         engine.executeCommand("n");
         engine.executeCommand("e");
         engine.executeCommand("n");
+        engine.executeCommand("n");
 
-        engine.combatSelectAbility("punch");
+        engine.combatSelectAbility("fists");
         GameResult endTurnResult = engine.combatEndTurn();
 
         assertTrue(endTurnResult.snapshot().inCombat());
         assertNull(endTurnResult.snapshot().combatSnapshot().selectedAbilityId());
         assertTrue(endTurnResult.messages().stream().anyMatch(line -> line.contains("Ability selection canceled.")));
+    }
+
+    @Test
+    void supportsDuplicateItemsInRoomAndInventory() {
+        GameEngine engine = new GameEngine();
+        // Go to storage_building
+        engine.executeCommand("e");
+        GameSnapshot snapshotBefore = engine.snapshot();
+        // There should be 3 apple juices on the ground
+        assertEquals(List.of("apple_juice", "apple_juice", "apple_juice"), snapshotBefore.visibleItems());
+        assertTrue(snapshotBefore.inventory().isEmpty());
+
+        // Take two apple juices
+        engine.executeCommand("take apple_juice");
+        engine.executeCommand("take apple_juice");
+
+        GameSnapshot snapshotAfterTaking = engine.snapshot();
+        // Inventory should have 2 apple juices, and 1 should remain on the ground
+        assertEquals(List.of("apple_juice", "apple_juice"), snapshotAfterTaking.inventory());
+        assertEquals(List.of("apple_juice"), snapshotAfterTaking.visibleItems());
+
+        // Drop one apple juice
+        engine.executeCommand("drop apple_juice");
+        GameSnapshot snapshotAfterDropping = engine.snapshot();
+        // Inventory should have 1 apple juice, and 2 should be on the ground
+        assertEquals(List.of("apple_juice"), snapshotAfterDropping.inventory());
+        assertEquals(List.of("apple_juice", "apple_juice"), snapshotAfterDropping.visibleItems());
     }
 }

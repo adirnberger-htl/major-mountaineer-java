@@ -53,7 +53,7 @@ class SoundManagerTest {
             // We look for a file that actually exists relative to this test class to pass the resource check,
             // or we use an existing asset file string name if your test resources are configured.
             // Assuming your class path can find a dummy file, or mock the resource loader if needed.
-            soundManager.playMusic("test.mp3");
+            soundManager.playMusic("tracks/soundtrack1.mp3");
 
             // Verify if a MediaPlayer was instantiated
             assertFalse(mockedPlayer.constructed().isEmpty(), "MediaPlayer should have been created");
@@ -72,7 +72,7 @@ class SoundManagerTest {
         try (MockedConstruction<Media> mockedMedia = mockConstruction(Media.class);
              MockedConstruction<MediaPlayer> mockedPlayer = mockConstruction(MediaPlayer.class)) {
 
-            soundManager.playMusic("test.mp3");
+            soundManager.playMusic("tracks/soundtrack1.mp3");
             MediaPlayer mockPlayerInstance = mockedPlayer.constructed().get(0);
 
             // Set volume way over maximum bound
@@ -87,7 +87,7 @@ class SoundManagerTest {
         try (MockedConstruction<Media> mockedMedia = mockConstruction(Media.class);
              MockedConstruction<MediaPlayer> mockedPlayer = mockConstruction(MediaPlayer.class)) {
 
-            soundManager.playMusic("test.mp3");
+            soundManager.playMusic("tracks/soundtrack1.mp3");
             MediaPlayer mockPlayerInstance = mockedPlayer.constructed().get(0);
 
             soundManager.stopMusic();
