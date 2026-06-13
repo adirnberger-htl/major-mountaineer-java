@@ -1,4 +1,4 @@
-package org.example.majorgame;
+package org.example.majorgame.game;
 
 import org.example.majorgame.game.GameEngine;
 import org.example.majorgame.game.GameResult;
