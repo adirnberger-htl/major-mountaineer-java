@@ -96,7 +96,6 @@ public final class GameEngine {
 
     public GameResult openingScene() {
         List<String> messages = new ArrayList<>();
-        messages.addAll(instructionsText());
         return resultOf(messages);
     }
 
@@ -164,11 +163,14 @@ public final class GameEngine {
                 messages.add("You're already holding it!");
                 return;
             }
+            if (inventory.size() >= 4) {
+                messages.add("Your inventory is full (max 4 items).");
+                return;
+            }
 
             if (location.equals(itemLocations.get(item))) {
                 itemLocations.remove(item);
                 inventory.add(item);
-                messages.add("OK.");
                 return;
             }
 
@@ -183,10 +185,13 @@ public final class GameEngine {
                 messages.add("You aren't holding it!");
                 return;
             }
+            if (visibleItems().size() >= 4) {
+                messages.add("The ground is too cluttered here (max 4 items).");
+                return;
+            }
 
             inventory.remove(item);
             itemLocations.put(item, location);
-            messages.add("OK.");
         }, true);
     }
 
@@ -242,7 +247,9 @@ public final class GameEngine {
         return new GameSnapshot(
                 location,
                 room.title(),
-                buildLocationPrompt(),
+                List.copyOf(room.descriptionLines()),
+                List.copyOf(room.dialogLines()),
+                world.availableExits(location),
                 appleJuice,
                 honor,
                 zeroJuiceTurns,
@@ -314,16 +321,7 @@ public final class GameEngine {
                 .toList();
     }
 
-    private String buildLocationPrompt() {
-        Room room = world.room(location);
-        List<String> lines = new ArrayList<>();
-        lines.add("---- " + room.title() + " ----");
-        lines.addAll(room.descriptionLines());
-        for (String item : visibleItems()) {
-            lines.add("There is a " + item + " here.");
-        }
-        return String.join(System.lineSeparator(), lines);
-    }
+
 
     private void lowerAppleJuice() {
         appleJuice = Math.max(0, appleJuice - MOVE_JUICE_COST);
@@ -410,8 +408,10 @@ public final class GameEngine {
         if (activeCombat.playerWon()) {
             clearedCombatLocations.add(location);
             messages.add("The path is clear for now.");
+            world.appendDialog(location, "SYSTEM: Major defeated the enemy!");
             return;
         }
+        world.appendDialog(location, "SYSTEM: Major was defeated in combat.");
         triggerDeathAndRespawn(messages, "You were defeated in combat.");
     }
 

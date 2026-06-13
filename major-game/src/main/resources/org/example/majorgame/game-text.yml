@@ -3,31 +3,23 @@ locations:
   # Starter Area
 
   mud_huzz:
-    title: "Mud Huzz"
+    title: "Mud Hut"
     description:
-      - "You are in your mud huzz, your home."
-      - "EAST there is your storage building with your chest."
-      - "NORTH the train station from which you will start your adventures is located."
+      - "You are in your mud hut, your home."
   train_station:
     title: "Train Station"
     description:
       - "You are at the trusty ol train station. Here only one train leaves and arrives evrery day."
-      - "EAST you can attempt the HOHE DIRN hike"
-      - "NORTH you try your luck in at the TRAUNSTEIN."
-      - "WEST you can do the hardest tour, the GROSSE PRIEL."
-      - "SOUTH you can return to your mud huzz."
   storage_building:
     title: "Storage Building"
     description:
       - "You are in your storage building where your supplies are kept."
-      - "WEST you can return to your mud huzz."
   arm_chair:
     title: "The Living Room"
     description:
       - "You look at the empty arm chair where your wife used to sit."
       - "Its lonely ever since she died, you didnt dare touch the chair after the day of her funeral."
-      - "You hope that maybe some day youll find someone wholl be as perfect as she was."
-      - "EAST to return to the Mudd Huzz."
+      - "You hope that maybe some day youll find someone who'll be as perfect as she was."
 
   # The Illusion of choice
 
@@ -49,17 +41,16 @@ locations:
     description:
       - "Welcome the the HOHE DIRN hike."
       - "This is the beginner hike, lets hope you are well stocked in apple juice."
-      - "NORTH awaits the start of your journey. Be careful of the local population, they might be dangerous."
   hd_slums:
     title: "THE SLUMS"
     description:
-      - "Mhhhhh, where does the trail start?"
       - "There seems to be a local, we could ask him."
-      - "NORTH we can go to the nice looking old man and ask him for directions."
-      - "EAST there seems to be a small trail, we could just try our luck."
+    dialog:
+      - "Major: Mhhhhh, where does the trail start?"
   hd_homeless:
     title: "MEETING THE LOCAL"
-    description:
+    description: []
+    dialog:
       - "Major: Salutations gentleman, do you happen to know where the trail to the HOHE DIRN begins?"
       - "Man: Hm ..? You .. you want to go .. up there!!?"
       - "Man: YOU DARE DISTURB THE GODS !!?? YOU WILL NOT BRING DESPAIR UPON THIS VILLAGE !!!"
@@ -67,18 +58,18 @@ locations:
 paths:
   # Starter Area
   mud_huzz:
-    n: "train_station"
-    e: "storage_building"
-    w: "arm_chair"
+    n: "train_station|the train station from which you will start your adventures is located."
+    e: "storage_building|there is your storage building with your chest."
+    w: "arm_chair|you can return to your living room."
   train_station:
-    s: "mud_huzz"
-    e: "hohe_dirn"
-    n: "traunstein"
-    w: "grosser_priel"
+    s: "mud_huzz|you can return to your mud hut."
+    e: "hohe_dirn|you can attempt the HOHE DIRN hike."
+    n: "traunstein|you try your luck in at the TRAUNSTEIN."
+    w: "grosser_priel|you can do the hardest tour, the GROSSE PRIEL."
   storage_building:
-    w: "mud_huzz"
+    w: "mud_huzz|you can return to your mud hut."
   arm_chair:
-    e: "mud_huzz"
+    e: "mud_huzz|to return to the Mud Hut."
   # The Illusion of Choice
   traunstein:
     e: "hohe_dirn"
@@ -86,9 +77,10 @@ paths:
     e: "hohe_dirn"
   # Hohe Dirn Campaign
   hohe_dirn:
-    n: "hd_slums"
+    n: "hd_slums|awaits the start of your journey. Be careful of the local population, they might be dangerous."
   hd_slums:
-    n: "hd_homeless"
+    n: "hd_homeless|we can go to the nice looking old man and ask him for directions."
+    e: "hd_homeless|there seems to be a small trail, we could just try our luck."
 
 items:
   apple_juice: "storage_building"
