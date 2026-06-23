@@ -195,18 +195,10 @@ public final class GameTextCatalog {
                         "locations." + locationId + ".autoRouteDirection"
                 );
 
-                List<String> locationItems = optionalStringList(locationNode.get("items"), "locations." + locationId + ".items");
-                for (String itemId : locationItems) {
-                    if (!items.containsKey(itemId)) {
-                        throw new IllegalStateException("Location '" + locationId + "' references undefined item: " + itemId);
-                    }
-                    initialItems.add(new ItemPlacement(itemId, locationId));
-                }
-
                 LocationText locText = new LocationText(title, description, dialog, autoRouteMessage, autoRouteDirection);
                 locationsCompatibility.put(locationId, locText);
 
-                Room room = new Room(locationId, title, description, dialog, autoRouteMessage, autoRouteDirection);
+                Room room = parseRoom(locationId, locationNode, "/", items, initialItems);
                 flatRooms.put(locationId, room);
                 roomToScopePath.put(locationId, "/");
             }
