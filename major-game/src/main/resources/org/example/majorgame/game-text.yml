@@ -165,10 +165,21 @@ locations:
     title: "Mud Hut"
     description:
       - "You are in your mud hut, your home."
+    paths:
+      n: "train_station|the train station from which you will start your adventures is located."
+      e: "storage_building|there is your storage building with your chest."
+      w: "arm_chair|you can return to your living room."
+
   train_station:
     title: "Train Station"
     description:
       - "You are at the trusty ol train station. Here only one train leaves and arrives every day."
+    paths:
+      s: "mud_huzz|you can return to your mud hut."
+      e: "hohe_dirn|you can attempt the HOHE DIRN hike."
+      n: "traunstein|you try your luck in at the TRAUNSTEIN."
+      w: "grosser_priel|you can do the hardest tour, the GROSSE PRIEL."
+
   storage_building:
     title: "Storage Building"
     description:
@@ -177,6 +188,9 @@ locations:
       - "apple_juice"
       - "apple_juice"
       - "apple_juice"
+    paths:
+      w: "mud_huzz|you can return to your mud hut."
+
   arm_chair:
     title: "The Living Room"
     description:
@@ -185,6 +199,8 @@ locations:
       - "You hope that maybe some day you'll find someone who'll be as perfect as she was."
     items:
       - "wedding_ring"
+    paths:
+      e: "mud_huzz|to return to the Mud Hut."
 
   # The Illusion of choice
 
@@ -193,11 +209,16 @@ locations:
     description: [ ]
     autoRouteMessage: "Oops, seems like you fell asleep, you are now at ... HOHE DIRN?!"
     autoRouteDirection: "e"
+    paths:
+      e: "hohe_dirn"
+
   grosser_priel:
     title: "GROSSER PRIEL"
     description: [ ]
     autoRouteMessage: "zzzzZZZzzz ... what? .. where am I? ... HOHE DIRN?!"
     autoRouteDirection: "e"
+    paths:
+      e: "hohe_dirn"
 
   # Hohe Dirn Campaign
 
@@ -206,12 +227,19 @@ locations:
     description:
       - "Welcome the the HOHE DIRN hike."
       - "This is the beginner hike, lets hope you are well stocked in apple juice."
+    paths:
+      n: "hd_slums|awaits the start of your journey. Be careful of the local population, they might be dangerous."
+
   hd_slums:
     title: "THE SLUMS"
     description:
       - "There seems to be a local, we could ask him."
     dialog:
       - "Major: Mhhhhh, where does the trail start?"
+    paths:
+      n: "hd_homeless|we can go to the nice looking old man and ask him for directions."
+      e: "hd_small_trail|there seems to be a small trail, we could just try our luck."
+
   hd_homeless:
     title: "MEETING THE LOCAL"
     description: []
@@ -231,6 +259,7 @@ locations:
           weapons: ["walking_cane"]
           row: 1
           col: 3
+
   hd_small_trail:
     title: "SMALL TRAIL"
     description:
@@ -238,6 +267,10 @@ locations:
       - "It could be a shortcut tho.."
     dialog:
       - "Major: Mmhhh... This doesnt look quite right!"
+    paths:
+      w: "hd_slums|back to the slums."
+      n: "hd_wood_shed|advance on the fishy path."
+
   hd_wood_shed:
     title: "WOOD SHED"
     description:
@@ -259,6 +292,10 @@ locations:
           weapons: ["pitchfork"]
           row: 1
           col: 3
+    paths:
+      n: "hd_official_start|there is the real beginning."
+      s: "hd_small_trail|go back if you're a p*ssy."
+
   hd_official_start:
     title: "THE TRAIL"
     description:
@@ -268,38 +305,7 @@ locations:
       - "Major: Ohhh, I spy with my little eye.."
     items:
       - "apple_juice"
-paths:
-  # Starter Area
-  mud_huzz:
-    n: "train_station|the train station from which you will start your adventures is located."
-    e: "storage_building|there is your storage building with your chest."
-    w: "arm_chair|you can return to your living room."
-  train_station:
-    s: "mud_huzz|you can return to your mud hut."
-    e: "hohe_dirn|you can attempt the HOHE DIRN hike."
-    n: "traunstein|you try your luck in at the TRAUNSTEIN."
-    w: "grosser_priel|you can do the hardest tour, the GROSSE PRIEL."
-  storage_building:
-    w: "mud_huzz|you can return to your mud hut."
-  arm_chair:
-    e: "mud_huzz|to return to the Mud Hut."
-  # The Illusion of Choice
-  traunstein:
-    e: "hohe_dirn"
-  grosser_priel:
-    e: "hohe_dirn"
-  # Hohe Dirn Campaign
-  hohe_dirn:
-    n: "hd_slums|awaits the start of your journey. Be careful of the local population, they might be dangerous."
-  hd_slums:
-    n: "hd_homeless|we can go to the nice looking old man and ask him for directions."
-    e: "hd_small_trail|there seems to be a small trail, we could just try our luck."
-  hd_small_trail:
-    w: "hd_slums|back to the slums."
-    n: "hd_wood_shed|advance on the fishy path."
-  hd_wood_shed:
-    n: "hd_official_start|there is the real beginning."
-    s: "hd_small_trail|go back if you're a p*ssy."
+
 
 
 commands:
