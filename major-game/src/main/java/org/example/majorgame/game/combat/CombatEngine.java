@@ -330,11 +330,11 @@ public final class CombatEngine {
         int colDiff = Integer.compare(to.col(), from.col());
 
         CombatDataCatalog.GridPosition rowStep = new CombatDataCatalog.GridPosition(from.row() + rowDiff, from.col());
-        if (rowDiff != 0 && inBounds(rowStep)) {
+        if (rowDiff != 0 && inBounds(rowStep) && !isOccupied(rowStep)) {
             return rowStep;
         }
         CombatDataCatalog.GridPosition colStep = new CombatDataCatalog.GridPosition(from.row(), from.col() + colDiff);
-        if (colDiff != 0 && inBounds(colStep)) {
+        if (colDiff != 0 && inBounds(colStep) && !isOccupied(colStep)) {
             return colStep;
         }
         return null;

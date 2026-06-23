@@ -14,6 +14,12 @@ items:
     damage: 4
     range: 1
 
+  - id: "pitchfork"
+    name: "Pitchfork"
+    category: "weapon"
+    damage: 4
+    range: 2
+
   - id: "fists"
     name: "Fists"
     category: "weapon"
@@ -88,7 +94,31 @@ locations:
       - "Major: Salutations gentleman, do you happen to know where the trail to the HOHE DIRN begins?"
       - "Man: Hm ..? You .. you want to go .. up there!!?"
       - "Man: YOU DARE DISTURB THE GODS !!?? YOU WILL NOT BRING DESPAIR UPON THIS VILLAGE !!!"
-
+  hd_small_trail:
+    title: "SMALL TRAIL"
+    description:
+      - "You inspect the trail closer, it seems to be heading in the right direction but there is a big sing warning you it's private property."
+      - "It could be a shortcut tho.."
+    dialog:
+      - "Major: Mmhhh... This doesnt look quite right!"
+  hd_wood_shed:
+    title: "WOOD SHED"
+    description:
+      - "There is a wood shed right in front of you."
+    dialog:
+      - "Farmer: HA?? WHO IS THERE?"
+      - "Farmer: This is PRIVATE PROPERTY."
+      - "Major: I'm sorry sir... Is this not the path to HOHE DIRN?"
+      - "Farmer: YOU WILL NOT PASS!!!!"
+  hd_official_start:
+    title: "THE TRAIL"
+    description:
+      - "Aha, there is the trail after all."
+    dialog:
+      - "Major: Here it is!"
+      - "Major: Ohhh, I spy with my little eye.."
+    items:
+      - "apple_juice"
 paths:
   # Starter Area
   mud_huzz:
@@ -114,7 +144,14 @@ paths:
     n: "hd_slums|awaits the start of your journey. Be careful of the local population, they might be dangerous."
   hd_slums:
     n: "hd_homeless|we can go to the nice looking old man and ask him for directions."
-    e: "hd_homeless|there seems to be a small trail, we could just try our luck."
+    e: "hd_small_trail|there seems to be a small trail, we could just try our luck."
+  hd_small_trail:
+    w: "hd_slums|back to the slums."
+    n: "hd_wood_shed|advance on the fishy path."
+  hd_wood_shed:
+    n: "hd_official_start|there is the real beginning."
+    s: "hd_small_trail|go back if you're a p*ssy."
+
 
 commands:
   instructions:

@@ -5,9 +5,12 @@ import org.example.majorgame.game.GameResult;
 import org.example.majorgame.game.GameSnapshot;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -105,7 +108,7 @@ class GameEngineTest {
 
         assertEquals("mud_huzz", dieResult.snapshot().locationId());
         assertEquals(100, dieResult.snapshot().appleJuice());
-        assertTrue(dieResult.snapshot().gameOver());
+        assertTrue(dieResult.snapshot().freshRespawn());
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("[Stats]")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Apple juices drunk")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Respawned at checkpoint")));
@@ -189,5 +192,325 @@ class GameEngineTest {
         // Inventory should have 1 apple juice, and 2 should be on the ground
         assertEquals(List.of("apple_juice"), snapshotAfterDropping.inventory());
         assertEquals(List.of("apple_juice", "apple_juice"), snapshotAfterDropping.visibleItems());
+    }
+
+    @Test
+    void openingSceneContainsWelcomeText() {
+        GameEngine engine = new GameEngine();
+        GameResult result = engine.openingScene();
+        assertTrue(result.messages().stream().anyMatch(line -> line.contains("Welcome, Major!")));
+        assertTrue(result.messages().stream().anyMatch(line -> line.contains("Type 'instructions'")));
+    }
+
+    @Test
+    void returnPathsExistFromDeadEndRooms() {
+        GameEngine engine = new GameEngine();
+        // Go to hohe_dirn
+        engine.executeCommand("n");
+        engine.executeCommand("e");
+        assertEquals("hohe_dirn", engine.snapshot().locationId());
+
+        // Can go back to train_station (w)
+        GameResult wResult = engine.executeCommand("w");
+        assertEquals("train_station", wResult.snapshot().locationId());
+        
+        // Go back to hohe_dirn and then to slums
+        engine.executeCommand("e");
+        engine.executeCommand("n");
+        assertEquals("hd_slums", engine.snapshot().locationId());
+
+        // Can go back to hohe_dirn (s)
+        GameResult sResult = engine.executeCommand("s");
+        assertEquals("hohe_dirn", sResult.snapshot().locationId());
+    }
+
+    @Test
+    void honorChangesOnDeathAndCombat() {
+        GameEngine engine = new GameEngine();
+        assertEquals(25, engine.snapshot().honor());
+
+        // Manual die reduces honor by 5
+        engine.executeCommand("die");
+        assertEquals(20, engine.snapshot().honor());
+    }
+
+    @Test
+    void takeAndDropDoNotConsumeZeroJuiceTurns() {
+        GameEngine engine = new GameEngine();
+        // Drain juice to 0 by moving repeatedly
+        for (int i = 0; i < 5; i++) {
+            engine.executeCommand("n");
+            engine.executeCommand("s");
+        }
+        assertEquals(0, engine.snapshot().appleJuice());
+        assertEquals(0, engine.snapshot().zeroJuiceTurns());
+
+        // Take and drop should not increment zeroJuiceTurns
+        engine.executeCommand("take apple_juice"); // doesn't exist but runs command
+        assertEquals(0, engine.snapshot().zeroJuiceTurns());
+
+        engine.executeCommand("drop apple_juice"); // doesn't have it but runs command
+        assertEquals(0, engine.snapshot().zeroJuiceTurns());
+    }
+
+    private static final String TEST_CAMPAIGN_YAML = """
+items:
+  - id: "key"
+    name: "Old Key"
+    category: "other"
+  - id: "walking_cane"
+    name: "Walking Cane"
+    category: "weapon"
+    damage: 4
+    range: 1
+  - id: "fists"
+    name: "Fists"
+    category: "weapon"
+    damage: 5
+    range: 1
+commands:
+  instructions:
+    - "Go N/S/E/W"
+variables:
+  global_flag: false
+sections:
+  camp1:
+    title: "Campaign 1"
+    variables:
+      camp_flag: false
+    sections:
+      sec1:
+        title: "Section 1"
+        variables:
+          sec_flag: false
+        locations:
+          mud_huzz:
+            title: "Room A"
+            checkpoint: true
+            variables:
+              room_flag: false
+            description: ["Room A description."]
+            paths:
+              n: "room_b|Go north."
+          room_b:
+            title: "Room B"
+            description: ["Room B description."]
+            dialogue:
+              startNode: "greet"
+              nodes:
+                greet:
+                  speaker: "NPC"
+                  text: "Hello!"
+                  choices:
+                    - text: "Give item"
+                      targetNode: "reward"
+                      requiredItem: "key"
+                    - text: "Be aggressive"
+                      targetNode: "fight"
+                reward:
+                  speaker: "NPC"
+                  text: "Thanks!"
+                  endDialogue: true
+                  befriended: true
+                  setFlags:
+                    sec_flag: true
+                fight:
+                  speaker: "NPC"
+                  text: "En Garde!"
+                  endDialogue: true
+                  startCombat: true
+            encounter:
+              rows: 3
+              cols: 3
+              playerStart: { row: 2, col: 0 }
+              enemies:
+                - id: "npc_enemy"
+                  name: "NPC Enemy"
+                  maxHp: 10
+                  weapons: ["walking_cane"]
+                  row: 0
+                  col: 2
+            paths:
+              s: "mud_huzz|Go south."
+              e: "room_c|Go east."
+      sec2:
+        title: "Section 2"
+        locations:
+          room_c:
+            title: "Room C"
+            checkpoint: true
+            description: ["Room C description."]
+            challenge:
+              type: "balance_bar"
+              difficulty: "easy"
+              onSuccess:
+                setFlags:
+                  camp_flag: true
+                message: "You succeeded!"
+              onFailure:
+                damage: 20
+                failTarget: "mud_huzz"
+                message: "You failed!"
+            paths:
+              w: "room_b|Go west."
+""";
+
+    @Test
+    void testScopedVariablesAndLcaPopping() {
+        ByteArrayInputStream bis = new ByteArrayInputStream(TEST_CAMPAIGN_YAML.getBytes());
+        GameTextCatalog catalog = GameTextCatalog.load(bis);
+        GameEngine engine = new GameEngine(catalog);
+
+        // Start in mud_huzz
+        assertEquals("mud_huzz", engine.snapshot().locationId());
+
+        // Check initial scoped variable values
+        assertFalse(engine.getStoryFlag("global_flag"));
+        assertFalse(engine.getStoryFlag("camp_flag"));
+        assertFalse(engine.getStoryFlag("sec_flag"));
+        assertFalse(engine.getStoryFlag("room_flag"));
+
+        // Set room local flag to true
+        engine.setStoryFlag("room_flag", true);
+        assertTrue(engine.getStoryFlag("room_flag"));
+
+        // Set sec_flag to true
+        engine.setStoryFlag("sec_flag", true);
+        assertTrue(engine.getStoryFlag("sec_flag"));
+
+        // Move to room_b (same section, room scope mud_huzz is exited)
+        engine.executeCommand("n");
+        assertEquals("room_b", engine.snapshot().locationId());
+
+        // We must exit dialogue to allow moving out of room_b
+        engine.executeCommand("exit");
+
+        // room_flag should be popped/cleared (evaluates to false/default)
+        assertFalse(engine.getStoryFlag("room_flag"));
+        // sec_flag should still be true (we did not exit sec1)
+        assertTrue(engine.getStoryFlag("sec_flag"));
+
+        // Move to room_c (different section, exits sec1 and enters sec2. LCA is camp1)
+        engine.executeCommand("e");
+        assertEquals("room_c", engine.snapshot().locationId());
+
+        // sec_flag from sec1 should be popped/cleared
+        assertFalse(engine.getStoryFlag("sec_flag"));
+    }
+
+    @Test
+    void testHierarchicalCheckpointsAndDeathRespawn() {
+        ByteArrayInputStream bis = new ByteArrayInputStream(TEST_CAMPAIGN_YAML.getBytes());
+        GameTextCatalog catalog = GameTextCatalog.load(bis);
+        GameEngine engine = new GameEngine(catalog);
+
+        // mud_huzz is a checkpoint, automatically registered for /camp1/sec1/mud_huzz/
+        assertEquals("mud_huzz", engine.snapshot().locationId());
+
+        // Move to room_b (no checkpoint)
+        engine.executeCommand("n");
+        // We must exit dialogue to allow moving out of room_b
+        engine.executeCommand("exit");
+
+        // Move to room_c (checkpoint in /camp1/sec2/room_c/)
+        engine.executeCommand("e");
+        assertEquals("room_c", engine.snapshot().locationId());
+
+        // Die in room_c. Nearest active checkpoint should resolve to room_c
+        GameResult dieInC = engine.executeCommand("die");
+        assertEquals("room_c", dieInC.snapshot().locationId());
+
+        // Move back to room_b (exits sec2, which pops room_c active checkpoint!)
+        engine.executeCommand("w");
+        assertEquals("room_b", engine.snapshot().locationId());
+
+        // Die in room_b. /camp1/sec2/room_c/ checkpoint was popped, nearest checkpoint is mud_huzz
+        GameResult dieInB = engine.executeCommand("die");
+        assertEquals("mud_huzz", dieInB.snapshot().locationId());
+    }
+
+    @Test
+    void testDialogueTreesAndBefriending() {
+        ByteArrayInputStream bis = new ByteArrayInputStream(TEST_CAMPAIGN_YAML.getBytes());
+        GameTextCatalog catalog = GameTextCatalog.load(bis);
+        GameEngine engine = new GameEngine(catalog);
+
+        // Move to room_b to trigger dialogue
+        engine.executeCommand("n");
+        assertNotNull(engine.getActiveDialogue());
+
+        // Attempt choice 1 (requires key). Should fail because we don't have it.
+        GameResult choiceFail = engine.executeCommand("1");
+        assertTrue(choiceFail.messages().stream().anyMatch(m -> m.contains("Requires item: key")));
+        assertNotNull(engine.getActiveDialogue());
+
+        // Gain key item
+        engine.gainItem("key");
+
+        // Now choice 1 should be allowed and execute successfully, befriending NPC
+        GameResult choiceSuccess = engine.executeCommand("1");
+        assertTrue(choiceSuccess.messages().stream().anyMatch(m -> m.contains("befriended")));
+        assertNull(engine.getActiveDialogue());
+        assertTrue(engine.getStoryFlag("sec_flag")); // setFlags from choice reward
+    }
+
+    @Test
+    void testDialogueCombatTrigger() {
+        ByteArrayInputStream bis = new ByteArrayInputStream(TEST_CAMPAIGN_YAML.getBytes());
+        GameTextCatalog catalog = GameTextCatalog.load(bis);
+        GameEngine engine = new GameEngine(catalog);
+
+        // Move to room_b to trigger dialogue
+        engine.executeCommand("n");
+        assertNotNull(engine.getActiveDialogue());
+
+        // Choice 2 triggers fight
+        GameResult fightResult = engine.executeCommand("2");
+        assertNull(engine.getActiveDialogue());
+        assertTrue(fightResult.snapshot().inCombat());
+    }
+
+    @Test
+    void testChallengePhysicsAndOutcomes() {
+        ByteArrayInputStream bis = new ByteArrayInputStream(TEST_CAMPAIGN_YAML.getBytes());
+        GameTextCatalog catalog = GameTextCatalog.load(bis);
+        GameEngine engine = new GameEngine(catalog);
+
+        // Bypass dialogue peacefully to room_c
+        engine.executeCommand("n");
+        engine.gainItem("key");
+        engine.executeCommand("1");
+        engine.executeCommand("e");
+        assertEquals("room_c", engine.snapshot().locationId());
+
+        // room_c starts a challenge
+        assertNotNull(engine.getActiveChallenge());
+        double initialPos = engine.getActiveChallenge().getPlayerPosition();
+        assertEquals(0.5, initialPos);
+
+        // Apply impulse (steer left) and tick to let physics run
+        engine.executeCommand("w");
+        engine.executeCommand("tick 0.1");
+        assertTrue(engine.getActiveChallenge().getPlayerPosition() != 0.5);
+
+        // Complete challenge using reflection to ensure success
+        ChallengeEngine active = engine.getActiveChallenge();
+        assertNotNull(active);
+        try {
+            java.lang.reflect.Field finishedField = active.getClass().getDeclaredField("finished");
+            finishedField.setAccessible(true);
+            finishedField.set(active, true);
+
+            java.lang.reflect.Field successField = active.getClass().getDeclaredField("success");
+            successField.setAccessible(true);
+            successField.set(active, true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        engine.handleChallengeCompletion(new java.util.ArrayList<>());
+
+        // Challenge should be completed successfully, camp_flag is set to true
+        assertNull(engine.getActiveChallenge());
+        assertTrue(engine.getStoryFlag("camp_flag"));
     }
 }

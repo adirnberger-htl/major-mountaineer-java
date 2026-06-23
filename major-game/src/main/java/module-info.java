@@ -9,4 +9,5 @@ module org.example.majorgame {
 
     exports org.example.majorgame;
     exports org.example.majorgame.game;
+    exports org.example.majorgame.game.combat;
 }
