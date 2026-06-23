@@ -321,8 +321,14 @@ public class ExplorationViewController {
             msgLabel.getStyleClass().add("dialog-system");
             box.setAlignment(Pos.CENTER);
             box.getChildren().add(msgLabel);
-        } else if (item.startsWith("Major: ")) {
-            msgLabel.setText(item.substring(7).trim());
+        } else if (item.startsWith("Major:") || item.startsWith("Major ")) {
+            String cleanText = item;
+            if (item.startsWith("Major: ")) {
+                cleanText = item.substring(7);
+            } else if (item.startsWith("Major ")) {
+                cleanText = item.substring(6);
+            }
+            msgLabel.setText(cleanText.trim());
             msgLabel.getStyleClass().add("dialog-major");
             box.setAlignment(Pos.CENTER_RIGHT);
             box.getChildren().add(msgLabel);
