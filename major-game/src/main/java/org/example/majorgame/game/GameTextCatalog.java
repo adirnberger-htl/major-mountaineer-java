@@ -181,7 +181,7 @@ public final class GameTextCatalog {
                 pathsCompatibility.put(roomId, pathStrings);
             }
         } else {
-            // Legacy Flat Mode
+            // Flat Mode
             Map<String, Object> locationsNode = asMap(root.get("locations"), "locations");
             for (Map.Entry<String, Object> entry : locationsNode.entrySet()) {
                 String locationId = entry.getKey();
@@ -201,39 +201,18 @@ public final class GameTextCatalog {
                 Room room = parseRoom(locationId, locationNode, "/", items, initialItems);
                 flatRooms.put(locationId, room);
                 roomToScopePath.put(locationId, "/");
-            }
 
-            Map<String, Object> pathsNode = asMap(root.get("paths"), "paths");
-            for (Map.Entry<String, Object> fromEntry : pathsNode.entrySet()) {
-                String fromLocation = fromEntry.getKey();
-                Map<String, Object> directionNode = asMap(fromEntry.getValue(), "paths." + fromLocation);
-                Map<Direction, String> directionMappings = new LinkedHashMap<>();
-                Map<Direction, PathDefinition> pathDefinitions = new LinkedHashMap<>();
-
-                for (Map.Entry<String, Object> directionEntry : directionNode.entrySet()) {
-                    Direction direction = parseDirection(directionEntry.getKey(), "paths." + fromLocation);
-                    Object pathValue = directionEntry.getValue();
-                    PathDefinition pathDef = parsePathDefinition(pathValue, "paths." + fromLocation + "." + directionEntry.getKey());
-                    pathDefinitions.put(direction, pathDef);
-
-                    String pathStr = pathDef.targetLocation();
-                    if (pathDef.label() != null && !pathDef.label().isEmpty()) {
-                        pathStr += "|" + pathDef.label();
+                // Populate compatibility paths map for this room
+                Map<Direction, String> pathStrings = new LinkedHashMap<>();
+                for (Map.Entry<Direction, PathDefinition> pathEntry : room.paths().entrySet()) {
+                    PathDefinition path = pathEntry.getValue();
+                    String pathStr = path.targetLocation();
+                    if (path.label() != null && !path.label().isEmpty()) {
+                        pathStr += "|" + path.label();
                     }
-                    directionMappings.put(direction, pathStr);
+                    pathStrings.put(pathEntry.getKey(), pathStr);
                 }
-                pathsCompatibility.put(fromLocation, directionMappings);
-
-                // Update flat room with parsed paths
-                Room existing = flatRooms.get(fromLocation);
-                if (existing != null) {
-                    flatRooms.put(fromLocation, new Room(
-                            existing.id(), existing.title(), existing.checkpoint(), existing.variables(),
-                            existing.descriptionLines(), existing.dialogLines(), existing.autoRouteMessage(),
-                            existing.autoRouteDirection(), pathDefinitions, existing.dialogue(),
-                            existing.encounter(), existing.challenge()
-                    ));
-                }
+                pathsCompatibility.put(locationId, pathStrings);
             }
         }
 
