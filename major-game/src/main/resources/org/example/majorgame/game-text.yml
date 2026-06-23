@@ -34,6 +34,131 @@ items:
 
 locations:
 
+  # ============================================================================
+  # TEMPLATE NODES FOR NARRATIVE DESIGN
+  # (These serve as templates and reference structures for your new rooms)
+  # ============================================================================
+
+  # 1. Dialogue-Heavy Node
+  # Demonstrates conversation trees, choices, requirements, rewards, and combat triggers.
+  template_dialogue:
+    title: "Dialogue Template Node"
+    checkpoint: false # Set true to make entering this room the active respawn point
+    variables:
+      spoke_to_merchant: false # Scoped variables declared at the node level
+    description:
+      - "This is a template node for an interactive dialogue system."
+      - "It demonstrates CYOA branching trees, gated choices, and flag triggers."
+    dialogue:
+      startNode: "intro" # Entry point node of the conversation
+      nodes:
+        intro:
+          speaker: "Merchant"
+          text: "Welcome, adventurer! Would you like to buy this apple juice for 20 Honor?"
+          choices:
+            - text: "Yes, I will buy it."
+              targetNode: "buy_potion"
+              requiredHonor: 20 # Option is disabled/locked if player has less honor
+              failMessage: "You don't have enough honor to buy this."
+            - text: "No thanks, I will keep walking."
+              targetNode: "decline_potion"
+            - text: "Hand over the juice or prepare to fight!"
+              targetNode: "aggressive_fight"
+        buy_potion:
+          speaker: "Merchant"
+          text: "An excellent choice! Here is your juice."
+          endDialogue: true # Ends the dialogue
+          itemGain: "apple_juice" # Adds item to inventory
+          honorCost: 20 # Deducts honor
+          setFlags:
+            spoke_to_merchant: true # Sets local variable
+        decline_potion:
+          speaker: "Merchant"
+          text: "Safe travels, friend."
+          endDialogue: true
+          befriended: true # Clears the combat encounter peacefully
+        aggressive_fight:
+          speaker: "Merchant"
+          text: "Guards! Help!"
+          endDialogue: true
+          startCombat: true # Triggers combat mode (uses the encounter block below)
+    # Optional: Combat grid configuration if dialogue ends in startCombat or player attacks
+    encounter:
+      rows: 3
+      cols: 3
+      playerStart: { row: 2, col: 0 }
+      enemies:
+        - id: "merchant_guard"
+          name: "Guard"
+          maxHp: 15
+          weapons: ["walking_cane"]
+          row: 1
+          col: 2
+    paths:
+      n: "mud_huzz|return to the Mud Hut."
+
+  # 2. Combat/Fight Node
+  # Demonstrates setting up a grid-based encounter where exits are locked until cleared.
+  template_fight:
+    title: "Combat Template Node"
+    description:
+      - "This is a template node for a tactical grid-based combat encounter."
+      - "Exits are locked automatically until combat is completed."
+    encounter:
+      rows: 4
+      cols: 4
+      playerStart: { row: 3, col: 1 } # Player starting cell (0-indexed)
+      enemies:
+        - id: "template_wolf_1"
+          name: "Dire Wolf"
+          maxHp: 12
+          weapons: ["fists"] # Weapon attack/damage characteristics defined in items section
+          row: 1
+          col: 2
+        - id: "template_wolf_2"
+          name: "Young Wolf"
+          maxHp: 8
+          weapons: ["fists"]
+          row: 1
+          col: 3
+    paths:
+      n: "mud_huzz|return to the Mud Hut."
+
+  # 3. Challenge Node
+  # Demonstrates balance physics bar, success/failure outcomes, and failTarget teleporting.
+  template_challenge:
+    title: "Challenge Template Node"
+    checkpoint: true # Automatically sets this location as active checkpoint on entry
+    variables:
+      crossed_bridge: false # Node-local flag
+    description:
+      - "This is a template node for a balance bar physics mini-game challenge."
+    challenge:
+      type: "balance_bar" # Mini-game type
+      difficulty: "medium" # Physics difficulty: "easy", "medium", "hard"
+      onSuccess:
+        setFlags:
+          crossed_bridge: true # Sets local variable
+        itemGain: "apple_juice"
+        honorGain: 10
+        message: "You balanced carefully across the bridge and made it safely to the other side!"
+      onFailure:
+        juiceCost: 20 # Depletes canteen
+        honorCost: 5
+        damage: 10 # Direct health deduction (or death if health <= 0)
+        failTarget: "mud_huzz" # Teleport player to this recovery room on failure
+        message: "You fell off the bridge and got washed back to your Mud Hut!"
+    paths:
+      e:
+        target: "train_station"
+        label: "Proceed east past the bridge"
+        requireFlags:
+          - "crossed_bridge" # Blocks movement until variable is true
+        failMessage: "You must cross the bridge challenge before you can proceed."
+      w: "mud_huzz|return to the Mud Hut."
+
+  # ============================================================================
+
   # Starter Area
 
   mud_huzz:
