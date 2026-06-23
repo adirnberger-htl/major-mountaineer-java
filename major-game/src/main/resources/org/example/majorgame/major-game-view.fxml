@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController" styleClass="root-pane">
+<StackPane fx:id="rootStackPane" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController" styleClass="root-pane">
 
     <BorderPane fx:id="rootPane">
         <padding>
@@ -109,8 +109,10 @@
         <Label text="Instructions" styleClass="location-title"/>
         <VBox fx:id="instructionsListContainer" spacing="8.0"/>
         <Button text="Close" onAction="#onCloseInstructions" styleClass="command-button" maxWidth="Infinity"/>
-        <Label fx:id="locationPromptLabel"/>
-        <ListView fx:id="outputArea" />
     </VBox>
+
+    <!-- Hidden elements to satisfy controller wiring without altering visual UI layout -->
+    <Label fx:id="locationPromptLabel" visible="false" managed="false"/>
+    <ListView fx:id="outputArea" visible="false" managed="false" prefHeight="0" maxHeight="0" minHeight="0" opacity="0.0"/>
 
 </StackPane>

@@ -63,14 +63,14 @@ public class GameSoundController {
      * Handles sound transitions when entering or leaving combat.
      * Plays encounter sound on combat start, defeat sound on combat end.
      */
-    public void onCombatStateChanged(boolean inCombat) {
+    public void onCombatStateChanged(boolean inCombat, boolean wasDefeated) {
         // irgwas spielen bei kampf verlassen or joinen
         if (inCombat && !wasInCombat) {
             soundManager.stopMusic();
             soundManager.playEffect("effects/enemyspotted.wav");
         } else if (!inCombat && wasInCombat) {
             soundManager.stopMusic();
-            soundManager.playEffect("effects/honorloss.wav");
+            soundManager.playEffect(wasDefeated ? "effects/honorloss.wav" : "effects/honorgain.wav");
         }
         wasInCombat = inCombat;
     }
