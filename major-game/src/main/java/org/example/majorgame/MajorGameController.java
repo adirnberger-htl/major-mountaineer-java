@@ -44,9 +44,12 @@ public class MajorGameController {
     private BattleViewController battleView;
     private ExplorationViewController explorationView;
     private GameSoundController gameSoundController;
+    private DialogueViewController dialogueView;
+    private ChallengeViewController challengeView;
 
     // ── FXML nodes ──────────────────────────────────────────────────────────
 
+    @FXML private StackPane rootStackPane;
     @FXML private BorderPane rootPane;
     @FXML private VBox topPanel;
     @FXML private VBox mainContentBox;
@@ -99,6 +102,9 @@ public class MajorGameController {
                 dialogListView, engine, this::appendResult
         );
         explorationView.setup();
+
+        dialogueView = new DialogueViewController(rootStackPane, engine, this::appendResult);
+        challengeView = new ChallengeViewController(rootStackPane, engine, this::appendResult);
 
         appendResult(engine.openingScene());
         historyIndex = commandHistory.size();
@@ -260,14 +266,39 @@ public class MajorGameController {
 
     private void renderMode(GameSnapshot snapshot) {
         boolean inCombat = snapshot.inCombat() && snapshot.combatSnapshot() != null;
+        boolean inDialogue = engine.getActiveDialogue() != null;
+        boolean inChallenge = engine.getActiveChallenge() != null;
+
         gameSoundController.onCombatStateChanged(inCombat, snapshot.freshRespawn());
 
-        if (inCombat) {
+        if (inDialogue) {
             explorationView.hide();
+            battleView.hide();
+            if (challengeView != null) challengeView.hide();
+            if (dialogueView != null) dialogueView.show();
+            commandField.setDisable(true);
+            commandField.setPromptText("Dialogue Active — select options on screen");
+        } else if (inChallenge) {
+            explorationView.hide();
+            battleView.hide();
+            if (dialogueView != null) dialogueView.hide();
+            if (challengeView != null) challengeView.show();
+            commandField.setDisable(true);
+            commandField.setPromptText("Challenge Active — balance using A/D or Arrow keys");
+        } else if (inCombat) {
+            explorationView.hide();
+            if (dialogueView != null) dialogueView.hide();
+            if (challengeView != null) challengeView.hide();
             battleView.show(snapshot.combatSnapshot());
+            commandField.setDisable(false);
+            commandField.setPromptText("Enter combat command...");
         } else {
             battleView.hide();
+            if (dialogueView != null) dialogueView.hide();
+            if (challengeView != null) challengeView.hide();
             explorationView.show();
+            commandField.setDisable(false);
+            commandField.setPromptText("Enter command...");
         }
     }
 

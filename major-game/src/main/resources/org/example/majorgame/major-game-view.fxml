@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController" styleClass="root-pane">
+<StackPane fx:id="rootStackPane" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.majorgame.MajorGameController" styleClass="root-pane">
 
     <BorderPane fx:id="rootPane">
         <padding>

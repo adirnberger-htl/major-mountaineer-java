@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 final class GameWorld {
-    private static final GameTextCatalog TEXTS = GameTextCatalog.defaultCatalog();
 
     private final Map<String, Room> rooms;
     private final Map<String, Map<Direction, String>> paths;
@@ -22,30 +21,30 @@ final class GameWorld {
     }
 
     static GameWorld createDefault() {
-        Map<String, Room> rooms = new LinkedHashMap<>();
-        for (Map.Entry<String, GameTextCatalog.LocationText> entry : TEXTS.locations().entrySet()) {
-            String roomId = entry.getKey();
-            GameTextCatalog.LocationText locationText = entry.getValue();
-            rooms.put(roomId, new Room(
-                    roomId,
-                    locationText.title(),
-                    locationText.descriptionLines(),
-                    locationText.dialogLines(),
-                    locationText.autoRouteMessage(),
-                    locationText.autoRouteDirection()
-            ));
-        }
+        return create(GameTextCatalog.defaultCatalog());
+    }
 
-        Map<String, Map<Direction, String>> paths = TEXTS.paths();
+    static GameWorld create(GameTextCatalog catalog) {
+        Map<String, Room> rooms = catalog.flatRooms();
+
+        Map<String, Map<Direction, String>> paths = catalog.paths();
         // Programmatically inject missing return paths to avoid touching yml config files.
-        paths.computeIfAbsent("hd_homeless", k -> new LinkedHashMap<>()).put(Direction.S, "hd_slums|back to the slums.");
-        paths.computeIfAbsent("hd_official_start", k -> new LinkedHashMap<>()).put(Direction.S, "hd_wood_shed|back to the wood shed.");
-        paths.computeIfAbsent("hohe_dirn", k -> new LinkedHashMap<>()).put(Direction.W, "train_station|back to the train station.");
-        paths.computeIfAbsent("hd_slums", k -> new LinkedHashMap<>()).put(Direction.S, "hohe_dirn|back to the HOHE DIRN base.");
+        if (rooms.containsKey("hd_homeless")) {
+            paths.computeIfAbsent("hd_homeless", k -> new LinkedHashMap<>()).put(Direction.S, "hd_slums|back to the slums.");
+        }
+        if (rooms.containsKey("hd_official_start")) {
+            paths.computeIfAbsent("hd_official_start", k -> new LinkedHashMap<>()).put(Direction.S, "hd_wood_shed|back to the wood shed.");
+        }
+        if (rooms.containsKey("hohe_dirn")) {
+            paths.computeIfAbsent("hohe_dirn", k -> new LinkedHashMap<>()).put(Direction.W, "train_station|back to the train station.");
+        }
+        if (rooms.containsKey("hd_slums")) {
+            paths.computeIfAbsent("hd_slums", k -> new LinkedHashMap<>()).put(Direction.S, "hohe_dirn|back to the HOHE DIRN base.");
+        }
 
         validatePaths(rooms, paths);
 
-        List<GameTextCatalog.ItemPlacement> initialItems = TEXTS.initialItems();
+        List<GameTextCatalog.ItemPlacement> initialItems = catalog.initialItems();
         validateInitialItems(rooms, initialItems);
 
         return new GameWorld(rooms, paths, initialItems);
