@@ -22,7 +22,6 @@ public final class GameEngine {
             "mud_huzz",
             "hohe_dirn"
     );
-    private static final CombatDataCatalog COMBAT_DATA = CombatDataCatalog.defaultCatalog();
 
     private final GameTextCatalog texts;
     private final GameWorld world;
@@ -532,18 +531,11 @@ public final class GameEngine {
         }
 
         Room room = world.room(location);
-        CombatDataCatalog.EncounterDefinition encounter = null;
-        if (room != null && room.encounter() != null) {
-            encounter = room.encounter();
-        } else {
-            encounter = COMBAT_DATA.encounterForLocation(location);
-        }
-
-        if (encounter == null) {
+        if (room == null || room.encounter() == null) {
             return;
         }
 
-        activeCombat = CombatEngine.start(COMBAT_DATA, encounter, inventory);
+        activeCombat = CombatEngine.start(room.encounter(), inventory);
         messages.addAll(activeCombat.openingMessages());
         messages.add("Combat started. Use the battle grid to move and attack.");
     }

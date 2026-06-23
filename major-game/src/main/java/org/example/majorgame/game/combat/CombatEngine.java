@@ -18,7 +18,6 @@ public final class CombatEngine {
     private static final String PLAYER_NAME = "Major";
     private static final String PLAYER_WEAPON_ID = "fists";
 
-    private final CombatDataCatalog catalog;
     private final CombatDataCatalog.EncounterDefinition encounter;
     private final CombatUnit player;
     private final List<CombatUnit> enemies;
@@ -32,12 +31,10 @@ public final class CombatEngine {
     private boolean playerWon;
 
     private CombatEngine(
-            CombatDataCatalog catalog,
             CombatDataCatalog.EncounterDefinition encounter,
             CombatUnit player,
             List<CombatUnit> enemies
     ) {
-        this.catalog = catalog;
         this.encounter = encounter;
         this.player = player;
         this.enemies = enemies;
@@ -46,7 +43,6 @@ public final class CombatEngine {
     }
 
     public static CombatEngine start(
-            CombatDataCatalog catalog,
             CombatDataCatalog.EncounterDefinition encounter,
             Collection<String> playerInventory
     ) {
@@ -116,7 +112,7 @@ public final class CombatEngine {
             ));
         }
 
-        return new CombatEngine(catalog, encounter, player, enemies);
+        return new CombatEngine(encounter, player, enemies);
     }
 
     public List<String> openingMessages() {

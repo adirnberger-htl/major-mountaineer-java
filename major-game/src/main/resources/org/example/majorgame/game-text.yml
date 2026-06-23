@@ -219,6 +219,18 @@ locations:
       - "Major: Salutations gentleman, do you happen to know where the trail to the HOHE DIRN begins?"
       - "Man: Hm ..? You .. you want to go .. up there!!?"
       - "Man: YOU DARE DISTURB THE GODS !!?? YOU WILL NOT BRING DESPAIR UPON THIS VILLAGE !!!"
+    encounter:
+      rows: 4
+      cols: 4
+      playerStart: { row: 3, col: 1 }
+      enemies:
+        - id: "old_man_1"
+          name: "Old Man"
+          maxHp: 18
+          movesPerTurn: 1
+          weapons: ["walking_cane"]
+          row: 1
+          col: 3
   hd_small_trail:
     title: "SMALL TRAIL"
     description:
@@ -235,6 +247,18 @@ locations:
       - "Farmer: This is PRIVATE PROPERTY."
       - "Major: I'm sorry sir... Is this not the path to HOHE DIRN?"
       - "Farmer: YOU WILL NOT PASS!!!!"
+    encounter:
+      rows: 4
+      cols: 4
+      playerStart: { row: 3, col: 1 }
+      enemies:
+        - id: "farmer_1"
+          name: "Angry Farmer"
+          maxHp: 15
+          movesPerTurn: 1
+          weapons: ["pitchfork"]
+          row: 1
+          col: 3
   hd_official_start:
     title: "THE TRAIL"
     description:
