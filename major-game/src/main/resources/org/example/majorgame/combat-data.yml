@@ -20,3 +20,20 @@ encounters:
           - "walking_cane"
         row: 1
         col: 3
+
+  hd_farmer:
+    location: "hd_wood_shed"
+    rows: 4
+    cols: 4
+    playerStart:
+      row: 3
+      col: 1
+    enemies:
+      - id: "farmer_1"
+        name: "Angry Farmer"
+        maxHp: 15
+        movesPerTurn: 1
+        weapons:
+          - "pitchfork"
+        row: 1
+        col: 3

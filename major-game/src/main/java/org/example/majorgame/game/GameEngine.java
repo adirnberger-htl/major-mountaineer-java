@@ -96,6 +96,8 @@ public final class GameEngine {
 
     public GameResult openingScene() {
         List<String> messages = new ArrayList<>();
+        messages.add("Welcome, Major! Your journey begins at the Mud Hut.");
+        messages.add("Type 'instructions' to see available commands.");
         return resultOf(messages);
     }
 
@@ -179,7 +181,7 @@ public final class GameEngine {
             }
 
             messages.add("I don't see it here.");
-        }, true);
+        }, false);
     }
 
     public GameResult drop(String itemName) {
@@ -196,7 +198,7 @@ public final class GameEngine {
 
             inventory.remove(item);
             itemLocations.add(new GameTextCatalog.ItemPlacement(item, location));
-        }, true);
+        }, false);
     }
 
     public GameResult drink() {
@@ -245,7 +247,7 @@ public final class GameEngine {
         return snapshot(false);
     }
 
-    private GameSnapshot snapshot(boolean gameOver) {
+    private GameSnapshot snapshot(boolean freshRespawn) {
         Room room = world.room(location);
         CombatSnapshot combatSnapshot = inCombat() ? activeCombat.snapshot() : null;
         return new GameSnapshot(
@@ -259,7 +261,7 @@ public final class GameEngine {
                 zeroJuiceTurns,
                 List.copyOf(inventory),
                 List.copyOf(visibleItems()),
-                gameOver,
+                freshRespawn,
                 inCombat(),
                 combatSnapshot
         );
@@ -355,6 +357,7 @@ public final class GameEngine {
     }
 
     private void triggerDeathAndRespawn(List<String> messages, String reason) {
+        honor = Math.max(0, honor - 5);
         messages.add("");
         messages.add(reason);
         messages.add("");
@@ -413,6 +416,7 @@ public final class GameEngine {
             clearedCombatLocations.add(location);
             messages.add("The path is clear for now.");
             world.appendDialog(location, "SYSTEM: Major defeated the enemy!");
+            honor = Math.min(100, honor + 5);
             return;
         }
         world.appendDialog(location, "SYSTEM: Major was defeated in combat.");
@@ -435,9 +439,9 @@ public final class GameEngine {
     }
 
     private GameResult resultOf(List<String> messages) {
-        boolean gameOver = clearOutputOnNextResult;
+        boolean freshRespawn = clearOutputOnNextResult;
         clearOutputOnNextResult = false;
-        return new GameResult(List.copyOf(messages), snapshot(gameOver));
+        return new GameResult(List.copyOf(messages), snapshot(freshRespawn));
     }
 
     private void reset() {

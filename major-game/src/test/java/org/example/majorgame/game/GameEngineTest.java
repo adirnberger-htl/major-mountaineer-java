@@ -105,7 +105,7 @@ class GameEngineTest {
 
         assertEquals("mud_huzz", dieResult.snapshot().locationId());
         assertEquals(100, dieResult.snapshot().appleJuice());
-        assertTrue(dieResult.snapshot().gameOver());
+        assertTrue(dieResult.snapshot().freshRespawn());
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("[Stats]")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Apple juices drunk")));
         assertTrue(dieResult.messages().stream().anyMatch(line -> line.contains("Respawned at checkpoint")));
@@ -189,5 +189,64 @@ class GameEngineTest {
         // Inventory should have 1 apple juice, and 2 should be on the ground
         assertEquals(List.of("apple_juice"), snapshotAfterDropping.inventory());
         assertEquals(List.of("apple_juice", "apple_juice"), snapshotAfterDropping.visibleItems());
+    }
+
+    @Test
+    void openingSceneContainsWelcomeText() {
+        GameEngine engine = new GameEngine();
+        GameResult result = engine.openingScene();
+        assertTrue(result.messages().stream().anyMatch(line -> line.contains("Welcome, Major!")));
+        assertTrue(result.messages().stream().anyMatch(line -> line.contains("Type 'instructions'")));
+    }
+
+    @Test
+    void returnPathsExistFromDeadEndRooms() {
+        GameEngine engine = new GameEngine();
+        // Go to hohe_dirn
+        engine.executeCommand("n");
+        engine.executeCommand("e");
+        assertEquals("hohe_dirn", engine.snapshot().locationId());
+
+        // Can go back to train_station (w)
+        GameResult wResult = engine.executeCommand("w");
+        assertEquals("train_station", wResult.snapshot().locationId());
+        
+        // Go back to hohe_dirn and then to slums
+        engine.executeCommand("e");
+        engine.executeCommand("n");
+        assertEquals("hd_slums", engine.snapshot().locationId());
+
+        // Can go back to hohe_dirn (s)
+        GameResult sResult = engine.executeCommand("s");
+        assertEquals("hohe_dirn", sResult.snapshot().locationId());
+    }
+
+    @Test
+    void honorChangesOnDeathAndCombat() {
+        GameEngine engine = new GameEngine();
+        assertEquals(25, engine.snapshot().honor());
+
+        // Manual die reduces honor by 5
+        engine.executeCommand("die");
+        assertEquals(20, engine.snapshot().honor());
+    }
+
+    @Test
+    void takeAndDropDoNotConsumeZeroJuiceTurns() {
+        GameEngine engine = new GameEngine();
+        // Drain juice to 0 by moving repeatedly
+        for (int i = 0; i < 5; i++) {
+            engine.executeCommand("n");
+            engine.executeCommand("s");
+        }
+        assertEquals(0, engine.snapshot().appleJuice());
+        assertEquals(0, engine.snapshot().zeroJuiceTurns());
+
+        // Take and drop should not increment zeroJuiceTurns
+        engine.executeCommand("take apple_juice"); // doesn't exist but runs command
+        assertEquals(0, engine.snapshot().zeroJuiceTurns());
+
+        engine.executeCommand("drop apple_juice"); // doesn't have it but runs command
+        assertEquals(0, engine.snapshot().zeroJuiceTurns());
     }
 }

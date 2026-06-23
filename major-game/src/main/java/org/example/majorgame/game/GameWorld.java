@@ -37,6 +37,12 @@ final class GameWorld {
         }
 
         Map<String, Map<Direction, String>> paths = TEXTS.paths();
+        // Programmatically inject missing return paths to avoid touching yml config files.
+        paths.computeIfAbsent("hd_homeless", k -> new LinkedHashMap<>()).put(Direction.S, "hd_slums|back to the slums.");
+        paths.computeIfAbsent("hd_official_start", k -> new LinkedHashMap<>()).put(Direction.S, "hd_wood_shed|back to the wood shed.");
+        paths.computeIfAbsent("hohe_dirn", k -> new LinkedHashMap<>()).put(Direction.W, "train_station|back to the train station.");
+        paths.computeIfAbsent("hd_slums", k -> new LinkedHashMap<>()).put(Direction.S, "hohe_dirn|back to the HOHE DIRN base.");
+
         validatePaths(rooms, paths);
 
         List<GameTextCatalog.ItemPlacement> initialItems = TEXTS.initialItems();

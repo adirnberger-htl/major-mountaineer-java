@@ -15,6 +15,7 @@ public class SoundManager {
     private final Map<String, AudioClip> effects = new HashMap<>();
     private Media activeMedia;
     private MediaPlayer musicPlayer;
+    private AudioClip activeLongTrack;
 
     private double musicVolume = 0.35;
     private double effectsVolume = 0.65;
@@ -70,6 +71,7 @@ public class SoundManager {
             musicPlayer = null;
             activeMedia = null;
         }
+        stopLongWavTrack();
     }
 
     public void playEffect(String fileName) {
@@ -105,6 +107,7 @@ public class SoundManager {
     }
 
     public void playLongWavTrack(String fileName) {
+        stopLongWavTrack();
         URL resource = getClass().getResource(SOUND_PATH + fileName);
         if (resource == null) {
             System.err.println("Missing file: " + fileName);
@@ -112,10 +115,17 @@ public class SoundManager {
         }
 
         // AudioClip bypasses MediaPlayer's native compression issues
-        AudioClip longTrack = new AudioClip(resource.toExternalForm());
-        longTrack.setCycleCount(AudioClip.INDEFINITE); // Loop forever
-        longTrack.setVolume(musicVolume);
-        longTrack.play();
+        activeLongTrack = new AudioClip(resource.toExternalForm());
+        activeLongTrack.setCycleCount(AudioClip.INDEFINITE); // Loop forever
+        activeLongTrack.setVolume(musicVolume);
+        activeLongTrack.play();
+    }
+
+    public void stopLongWavTrack() {
+        if (activeLongTrack != null) {
+            activeLongTrack.stop();
+            activeLongTrack = null;
+        }
     }
 
 }

@@ -260,7 +260,7 @@ public class MajorGameController {
 
     private void renderMode(GameSnapshot snapshot) {
         boolean inCombat = snapshot.inCombat() && snapshot.combatSnapshot() != null;
-        gameSoundController.onCombatStateChanged(inCombat);
+        gameSoundController.onCombatStateChanged(inCombat, snapshot.freshRespawn());
 
         if (inCombat) {
             explorationView.hide();

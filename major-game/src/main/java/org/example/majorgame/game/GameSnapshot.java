@@ -17,11 +17,11 @@ public record GameSnapshot(
         int zeroJuiceTurns,
         List<String> inventory,
         List<String> visibleItems,
-        boolean gameOver,
+        boolean freshRespawn,
         boolean inCombat,
         CombatSnapshot combatSnapshot
 ) {
     public String locationPrompt() {
-       return locationTitle + " " + locationDescription;
+       return locationTitle + " " + String.join(" ", locationDescription);
     }
 }
