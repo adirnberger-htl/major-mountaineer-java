@@ -535,5 +535,25 @@ sections:
         boolean hasMeterMessage = resultMove.messages().stream().anyMatch(msg -> msg.contains("[Meter]"));
         assertFalse(hasMeterMessage, "Expected no meter messages in game results.");
     }
+
+    @Test
+    void testDrinkWithoutJuice() {
+        GameEngine engine = new GameEngine();
+        
+        // Assert inventory is initially empty
+        assertTrue(engine.snapshot().inventory().isEmpty());
+
+        // Execute drink command
+        GameResult result = engine.executeCommand("drink");
+
+        // Verify the notification message is an error (contains "don't")
+        assertTrue(result.messages().stream().anyMatch(msg -> msg.toLowerCase().contains("don't") && msg.toLowerCase().contains("apple juice")),
+                "Expected error message containing \"don't\" and \"apple juice\".");
+
+        // Verify the growl dialogue was appended to the room's dialog lines
+        assertTrue(engine.snapshot().locationDialog().stream().anyMatch(line -> line.contains("Major growls: \"No apple juice? Um gods wün!\"")),
+                "Expected growl dialogue to be appended to room's dialog history.");
+    }
 }
+
 

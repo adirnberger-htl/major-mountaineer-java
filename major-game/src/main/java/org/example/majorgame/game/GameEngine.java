@@ -328,7 +328,8 @@ public final class GameEngine {
     public GameResult drink() {
         return runTurn(messages -> {
             if (!inventory.contains("apple_juice")) {
-                messages.add("Major growls: \"No apple juice? Um gods wün!\"");
+                world.appendDialog(location, "Major growls: \"No apple juice? Um gods wün!\"");
+                messages.add("You don't have any apple juice.");
                 return;
             }
 
