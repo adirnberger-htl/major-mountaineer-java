@@ -157,8 +157,6 @@ commands:
   instructions:
     - "Available commands are:"
     - "n | s | e | w       -- to go in that direction."
-    - "take ITEM           -- to pick up an object."
-    - "drop ITEM           -- to put down an object."
     - "drink               -- to drink one apple_juice from inventory."
     - "check               -- to set this place as checkpoint (if allowed)."
     - "clear               -- to clear the dialogue log."

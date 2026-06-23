@@ -165,17 +165,11 @@ public final class GameEngine {
             return move(direction);
         }
 
-        if (command.startsWith("take(") && command.endsWith(")")) {
-            return take(command.substring(5, command.length() - 1));
+        if ((command.startsWith("take(") && command.endsWith(")")) || command.startsWith("take ") || "take".equals(command)) {
+            return resultOf(List.of("The 'take' command is deprecated. Please use the UI elements (drag-and-drop or Buttons) to take items."));
         }
-        if (command.startsWith("drop(") && command.endsWith(")")) {
-            return drop(command.substring(5, command.length() - 1));
-        }
-        if (command.startsWith("take ")) {
-            return take(command.substring(5));
-        }
-        if (command.startsWith("drop ")) {
-            return drop(command.substring(5));
+        if ((command.startsWith("drop(") && command.endsWith(")")) || command.startsWith("drop ") || "drop".equals(command)) {
+            return resultOf(List.of("The 'drop' command is deprecated. Please use the UI elements (drag-and-drop or Buttons) to drop items."));
         }
         return switch (command) {
             case "drink" -> drink();
@@ -476,9 +470,7 @@ public final class GameEngine {
     }
 
     private void printLowJuiceUpdate(List<String> messages) {
-        if (appleJuice <= LOW_JUICE_THRESHOLD) {
-            messages.add("[Meter] Apple juice is at " + appleJuice + ".");
-        }
+        // Redundant since we have a graphical progress bar at the bottom
     }
 
     private void printAppleDeathWarning(List<String> messages) {

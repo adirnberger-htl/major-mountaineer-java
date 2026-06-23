@@ -41,7 +41,7 @@ class GameEngineTest {
     void canTakeAndDrinkAppleJuiceToRefill() {
         GameEngine engine = new GameEngine();
         engine.executeCommand("e");
-        engine.executeCommand("take apple_juice");
+        engine.take("apple_juice");
         engine.executeCommand("w");
         engine.executeCommand("n");
         engine.executeCommand("s");
@@ -178,8 +178,8 @@ class GameEngineTest {
         assertTrue(snapshotBefore.inventory().isEmpty());
 
         // Take two apple juices
-        engine.executeCommand("take apple_juice");
-        engine.executeCommand("take apple_juice");
+        engine.take("apple_juice");
+        engine.take("apple_juice");
 
         GameSnapshot snapshotAfterTaking = engine.snapshot();
         // Inventory should have 2 apple juices, and 1 should remain on the ground
@@ -187,7 +187,7 @@ class GameEngineTest {
         assertEquals(List.of("apple_juice"), snapshotAfterTaking.visibleItems());
 
         // Drop one apple juice
-        engine.executeCommand("drop apple_juice");
+        engine.drop("apple_juice");
         GameSnapshot snapshotAfterDropping = engine.snapshot();
         // Inventory should have 1 apple juice, and 2 should be on the ground
         assertEquals(List.of("apple_juice"), snapshotAfterDropping.inventory());
@@ -246,10 +246,10 @@ class GameEngineTest {
         assertEquals(0, engine.snapshot().zeroJuiceTurns());
 
         // Take and drop should not increment zeroJuiceTurns
-        engine.executeCommand("take apple_juice"); // doesn't exist but runs command
+        engine.take("apple_juice"); // doesn't exist but runs command
         assertEquals(0, engine.snapshot().zeroJuiceTurns());
 
-        engine.executeCommand("drop apple_juice"); // doesn't have it but runs command
+        engine.drop("apple_juice"); // doesn't have it but runs command
         assertEquals(0, engine.snapshot().zeroJuiceTurns());
     }
 
@@ -513,4 +513,27 @@ sections:
         assertNull(engine.getActiveChallenge());
         assertTrue(engine.getStoryFlag("camp_flag"));
     }
+
+    @Test
+    void testDeprecatedCommandsAndNoMeter() {
+        GameEngine engine = new GameEngine();
+        
+        // Test take command deprecation message
+        GameResult resultTake = engine.executeCommand("take apple_juice");
+        assertTrue(resultTake.messages().stream().anyMatch(msg -> msg.contains("deprecated") && msg.contains("take")),
+                "Expected deprecation message for 'take' command.");
+
+        // Test drop command deprecation message
+        GameResult resultDrop = engine.executeCommand("drop apple_juice");
+        assertTrue(resultDrop.messages().stream().anyMatch(msg -> msg.contains("deprecated") && msg.contains("drop")),
+                "Expected deprecation message for 'drop' command.");
+
+        // Drain juice to below LOW_JUICE_THRESHOLD (which is 25 or similar)
+        // Ensure no "[Meter]" messages are generated when moving or performing commands
+        engine.executeCommand("e"); // moves, drains juice
+        GameResult resultMove = engine.executeCommand("w");
+        boolean hasMeterMessage = resultMove.messages().stream().anyMatch(msg -> msg.contains("[Meter]"));
+        assertFalse(hasMeterMessage, "Expected no meter messages in game results.");
+    }
 }
+
